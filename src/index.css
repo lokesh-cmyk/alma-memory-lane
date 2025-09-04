@@ -8,35 +8,68 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* MeetAlma.ai warm, calming color palette */
+    --background: 220 30% 98%;
+    --foreground: 230 15% 15%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 220 40% 99%;
+    --card-foreground: 230 15% 20%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 220 40% 99%;
+    --popover-foreground: 230 15% 20%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Soft blue primary - calming and trustworthy */
+    --primary: 215 70% 60%;
+    --primary-foreground: 220 30% 98%;
+    --primary-glow: 215 85% 75%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Gentle purple secondary */
+    --secondary: 260 30% 92%;
+    --secondary-foreground: 260 15% 25%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Muted colors for subtle UI elements */
+    --muted: 220 20% 95%;
+    --muted-foreground: 220 10% 50%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Gentle accent color */
+    --accent: 180 40% 88%;
+    --accent-foreground: 180 25% 25%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 70% 60%;
+    --destructive-foreground: 220 30% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 220 25% 90%;
+    --input: 220 25% 90%;
+    --ring: 215 70% 60%;
 
-    --radius: 0.5rem;
+    /* Memory type colors */
+    --memory-text: 200 60% 65%;
+    --memory-voice: 280 50% 70%;  
+    --memory-photo: 350 60% 65%;
+    --memory-document: 40 50% 65%;
+    --memory-url: 120 50% 65%;
+
+    /* Emotion colors - intuitive mapping */
+    --emotion-happy: 120 60% 65%;
+    --emotion-excited: 50 85% 65%;
+    --emotion-calm: 200 50% 70%;
+    --emotion-sad: 220 40% 60%;
+    --emotion-angry: 0 70% 60%;
+    --emotion-anxious: 280 30% 65%;
+    --emotion-grateful: 160 50% 65%;
+    --emotion-nostalgic: 260 40% 70%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(215 70% 60%), hsl(215 85% 75%));
+    --gradient-subtle: linear-gradient(180deg, hsl(220 30% 98%), hsl(220 25% 96%));
+    --gradient-card: linear-gradient(145deg, hsl(220 40% 99%), hsl(220 30% 97%));
+
+    /* Shadows */
+    --shadow-soft: 0 2px 8px -2px hsl(215 70% 60% / 0.1);
+    --shadow-elevated: 0 8px 25px -8px hsl(215 70% 60% / 0.15);
+    --shadow-glow: 0 0 25px hsl(215 85% 75% / 0.3);
+
+    --radius: 0.75rem;
 
     --sidebar-background: 0 0% 98%;
 
@@ -56,33 +89,62 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Dark mode - maintaining warmth and calmness */
+    --background: 230 25% 8%;
+    --foreground: 220 20% 92%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 230 20% 12%;
+    --card-foreground: 220 20% 92%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 230 20% 12%;
+    --popover-foreground: 220 20% 92%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 215 80% 70%;
+    --primary-foreground: 230 25% 8%;
+    --primary-glow: 215 90% 80%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 260 15% 18%;
+    --secondary-foreground: 260 20% 85%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 230 15% 15%;
+    --muted-foreground: 220 10% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 180 25% 20%;
+    --accent-foreground: 180 30% 85%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 75% 65%;
+    --destructive-foreground: 230 25% 8%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 230 15% 20%;
+    --input: 230 15% 20%;
+    --ring: 215 80% 70%;
+
+    /* Memory type colors - adjusted for dark mode */
+    --memory-text: 200 70% 70%;
+    --memory-voice: 280 60% 75%;  
+    --memory-photo: 350 70% 70%;
+    --memory-document: 40 60% 70%;
+    --memory-url: 120 60% 70%;
+
+    /* Emotion colors - dark mode variants */
+    --emotion-happy: 120 70% 70%;
+    --emotion-excited: 50 90% 70%;
+    --emotion-calm: 200 60% 75%;
+    --emotion-sad: 220 50% 65%;
+    --emotion-angry: 0 75% 65%;
+    --emotion-anxious: 280 40% 70%;
+    --emotion-grateful: 160 60% 70%;
+    --emotion-nostalgic: 260 50% 75%;
+
+    /* Dark mode gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(215 80% 70%), hsl(215 90% 80%));
+    --gradient-subtle: linear-gradient(180deg, hsl(230 25% 8%), hsl(230 20% 10%));
+    --gradient-card: linear-gradient(145deg, hsl(230 20% 12%), hsl(230 15% 10%));
+
+    /* Dark mode shadows */
+    --shadow-soft: 0 2px 8px -2px hsl(230 25% 5% / 0.4);
+    --shadow-elevated: 0 8px 25px -8px hsl(230 25% 5% / 0.6);
+    --shadow-glow: 0 0 25px hsl(215 90% 80% / 0.2);
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
