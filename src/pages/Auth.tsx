@@ -8,6 +8,9 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import { Smartphone, MessageCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
+const WHATSAPP_SENDER = "+14155238886";
+const TWILIO_CALLBACK_URL = "https://timberwolf-mastiff-9776.twil.io/demo-reply";
+
 const Auth = () => {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
@@ -25,12 +28,23 @@ const Auth = () => {
       return;
     }
 
+    // Ensure E.164 format for WhatsApp/Twilio
+    if (!/^\+[1-9]\d{7,14}$/.test(phone.trim())) {
+      toast({
+        title: "Invalid phone format",
+        description: "Use E.164 format, e.g., +14155551234",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOtp({
         phone: phone.trim(),
         options: {
           channel: 'whatsapp',
+          shouldCreateUser: true,
         }
       });
 
@@ -129,7 +143,7 @@ const Auth = () => {
                   <Input
                     id="phone"
                     type="tel"
-                    placeholder="+1 (555) 123-4567"
+                    placeholder="e.g., +14155551234"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className="pl-10"
@@ -147,7 +161,7 @@ const Auth = () => {
               </Button>
 
               <div className="text-center text-sm text-muted-foreground">
-                We'll send a verification code to your WhatsApp
+                We'll send a verification code to your WhatsApp from {WHATSAPP_SENDER}
               </div>
             </>
           ) : (
@@ -156,7 +170,7 @@ const Auth = () => {
                 <div className="text-center">
                   <h3 className="font-semibold">Enter Verification Code</h3>
                   <p className="text-sm text-muted-foreground mt-1">
-                    We sent a 6-digit code to {phone}
+                    Check WhatsApp {WHATSAPP_SENDER} for your 6-digit code sent to {phone}
                   </p>
                 </div>
 
