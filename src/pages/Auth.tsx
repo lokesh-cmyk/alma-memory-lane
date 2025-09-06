@@ -102,6 +102,7 @@ const Auth = () => {
         email: email.trim(),
         options: {
           shouldCreateUser: true,
+          emailRedirectTo: `${window.location.origin}/`,
           data: {
             display_name: name.trim(),
             phone: phone.trim(),
