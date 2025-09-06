@@ -17,7 +17,8 @@ const Auth = () => {
   const [name, setName] = useState("");
   const [otp, setOtp] = useState("");
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
-  const [step, setStep] = useState<'phone' | 'email' | 'otp'>('phone');
+  const [signinMethod, setSigninMethod] = useState<'phone' | 'email'>('phone');
+  const [step, setStep] = useState<'signin' | 'signup' | 'otp'>('signin');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -47,7 +48,7 @@ const Auth = () => {
         phone: phone.trim(),
         options: {
           channel: 'whatsapp',
-          shouldCreateUser: true,
+          shouldCreateUser: authMode === 'signup',
         }
       });
 
@@ -78,36 +79,55 @@ const Auth = () => {
   };
 
   const handleSendEmailOtp = async () => {
-    if (!email.trim() || !name.trim() || !phone.trim()) {
-      toast({
-        title: "All fields required",
-        description: "Please fill in name, email, and WhatsApp number.",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (authMode === 'signup') {
+      // For signup, require all fields
+      if (!email.trim() || !name.trim() || !phone.trim()) {
+        toast({
+          title: "All fields required",
+          description: "Please fill in name, email, and WhatsApp number.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    if (!/^\+[1-9]\d{7,14}$/.test(phone.trim())) {
-      toast({
-        title: "Invalid phone format",
-        description: "Use E.164 format, e.g., +14155551234",
-        variant: "destructive",
-      });
-      return;
+      if (!/^\+[1-9]\d{7,14}$/.test(phone.trim())) {
+        toast({
+          title: "Invalid phone format",
+          description: "Use E.164 format, e.g., +14155551234",
+          variant: "destructive",
+        });
+        return;
+      }
+    } else {
+      // For signin, only require email
+      if (!email.trim()) {
+        toast({
+          title: "Email required",
+          description: "Please enter your email address.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     setLoading(true);
     try {
+      const otpOptions: any = {
+        shouldCreateUser: authMode === 'signup',
+        emailRedirectTo: `${window.location.origin}/`,
+      };
+
+      // Only include user data for signup
+      if (authMode === 'signup') {
+        otpOptions.data = {
+          display_name: name.trim(),
+          phone: phone.trim(),
+        };
+      }
+
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
-        options: {
-          shouldCreateUser: true,
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            display_name: name.trim(),
-            phone: phone.trim(),
-          }
-        }
+        options: otpOptions
       });
 
       if (error) {
@@ -150,7 +170,7 @@ const Auth = () => {
     try {
       let verifyResult;
       
-      if (authMode === 'signin') {
+      if (signinMethod === 'phone' || (authMode === 'signin' && phone)) {
         // Phone-based signin
         verifyResult = await supabase.auth.verifyOtp({
           phone: phone.trim(),
@@ -158,7 +178,7 @@ const Auth = () => {
           type: 'sms'
         });
       } else {
-        // Email-based signup
+        // Email-based signin/signup
         verifyResult = await supabase.auth.verifyOtp({
           email: email.trim(),
           token: otp.trim(),
@@ -177,7 +197,7 @@ const Auth = () => {
       }
 
       // For email signup, update profile with name and phone
-      if (authMode === 'signup' && verifyResult.data.user) {
+      if (authMode === 'signup' && signinMethod === 'email' && verifyResult.data.user) {
         const { error: profileError } = await supabase
           .from('profiles')
           .upsert({
@@ -211,15 +231,23 @@ const Auth = () => {
     }
   };
 
+  const resetForm = () => {
+    setStep('signin');
+    setOtp('');
+    setEmail('');
+    setPhone('');
+    setName('');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4">
       <Card className="w-full max-w-md bg-background/80 backdrop-blur-sm border-white/20 shadow-elegant">
         <CardHeader className="text-center">
           <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center shadow-glow mx-auto mb-4">
-            {step === 'phone' ? (
-              <Smartphone className="w-8 h-8 text-white" />
-            ) : step === 'email' ? (
-              <Mail className="w-8 h-8 text-white" />
+            {step === 'signin' ? (
+              signinMethod === 'email' ? <Mail className="w-8 h-8 text-white" /> : <Smartphone className="w-8 h-8 text-white" />
+            ) : step === 'signup' ? (
+              <User className="w-8 h-8 text-white" />
             ) : (
               <MessageCircle className="w-8 h-8 text-white" />
             )}
@@ -228,84 +256,87 @@ const Auth = () => {
             Welcome to MeetAlma
           </CardTitle>
           <CardDescription>
-            {step === 'phone' 
-              ? 'Sign in with your WhatsApp number or create account' 
-              : step === 'email'
-              ? 'Enter your details to create an account'
+            {step === 'signin' 
+              ? `Sign in with your ${signinMethod === 'email' ? 'email' : 'WhatsApp number'}` 
+              : step === 'signup'
+              ? 'Create your account with email'
               : 'Enter the verification code we sent you'
             }
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {step === 'phone' ? (
+          {step === 'signin' ? (
             <>
-              {authMode === 'signin' && (
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-sm font-medium">
-                    Your WhatsApp Number
-                  </Label>
-                  <div className="relative">
+              {/* Signin Method Toggle */}
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  variant={signinMethod === 'phone' ? 'default' : 'outline'}
+                  onClick={() => setSigninMethod('phone')}
+                  className="flex items-center gap-2"
+                  disabled={loading}
+                >
+                  <Smartphone className="w-4 h-4" />
+                  WhatsApp
+                </Button>
+                <Button
+                  variant={signinMethod === 'email' ? 'default' : 'outline'}
+                  onClick={() => setSigninMethod('email')}
+                  className="flex items-center gap-2"
+                  disabled={loading}
+                >
+                  <Mail className="w-4 h-4" />
+                  Email
+                </Button>
+              </div>
+
+              {/* Input Field */}
+              <div className="space-y-2">
+                <Label htmlFor="signin-input" className="text-sm font-medium">
+                  {signinMethod === 'email' ? 'Email Address' : 'Your WhatsApp Number'}
+                </Label>
+                <div className="relative">
+                  {signinMethod === 'email' ? (
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  ) : (
                     <Smartphone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="e.g., +14155551234"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="pl-10"
-                      disabled={loading}
-                    />
-                  </div>
+                  )}
+                  <Input
+                    id="signin-input"
+                    type={signinMethod === 'email' ? 'email' : 'tel'}
+                    placeholder={signinMethod === 'email' ? 'your@email.com' : 'e.g., +14155551234'}
+                    value={signinMethod === 'email' ? email : phone}
+                    onChange={(e) => signinMethod === 'email' ? setEmail(e.target.value) : setPhone(e.target.value)}
+                    className="pl-10"
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+              <Button 
+                onClick={signinMethod === 'email' ? handleSendEmailOtp : handleSendPhoneOtp} 
+                className="w-full bg-gradient-primary hover:opacity-90 text-white shadow-glow"
+                disabled={loading}
+              >
+                {loading ? "Sending..." : `Send ${signinMethod === 'email' ? 'Email' : 'WhatsApp'} Code`}
+              </Button>
+
+              <div className="text-center">
+                <button
+                  onClick={() => setStep('signup')}
+                  className="text-sm text-primary hover:underline"
+                  disabled={loading}
+                >
+                  Don't have an account? Sign up with email
+                </button>
+              </div>
+
+              {signinMethod === 'phone' && (
+                <div className="text-center text-sm text-muted-foreground">
+                  We'll send a verification code to your WhatsApp from {WHATSAPP_SENDER}
                 </div>
               )}
-
-              {authMode === 'signin' ? (
-                <>
-                  <Button 
-                    onClick={handleSendPhoneOtp} 
-                    className="w-full bg-gradient-primary hover:opacity-90 text-white shadow-glow"
-                    disabled={loading}
-                  >
-                    {loading ? "Sending..." : "Send WhatsApp Code"}
-                  </Button>
-
-                  <div className="text-center">
-                    <button
-                      onClick={() => setAuthMode('signup')}
-                      className="text-sm text-primary hover:underline"
-                      disabled={loading}
-                    >
-                      Don't have an account? Sign up with email
-                    </button>
-                  </div>
-
-                  <div className="text-center text-sm text-muted-foreground">
-                    We'll send a verification code to your WhatsApp from {WHATSAPP_SENDER}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <Button 
-                    onClick={() => setStep('email')} 
-                    className="w-full bg-gradient-primary hover:opacity-90 text-white shadow-glow"
-                    disabled={loading}
-                  >
-                    Create Account with Email
-                  </Button>
-
-                  <div className="text-center">
-                    <button
-                      onClick={() => setAuthMode('signin')}
-                      className="text-sm text-primary hover:underline"
-                      disabled={loading}
-                    >
-                      Already have an account? Sign in with WhatsApp
-                    </button>
-                  </div>
-                </>
-              )}
             </>
-          ) : step === 'email' ? (
+          ) : step === 'signup' ? (
             <>
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -327,13 +358,13 @@ const Auth = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium">
+                  <Label htmlFor="email-signup" className="text-sm font-medium">
                     Email Address
                   </Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                     <Input
-                      id="email"
+                      id="email-signup"
                       type="email"
                       placeholder="Enter your email"
                       value={email}
@@ -365,16 +396,20 @@ const Auth = () => {
 
               <div className="space-y-3">
                 <Button 
-                  onClick={handleSendEmailOtp} 
+                  onClick={() => {
+                    setAuthMode('signup');
+                    setSigninMethod('email');
+                    handleSendEmailOtp();
+                  }} 
                   className="w-full bg-gradient-primary hover:opacity-90 text-white shadow-glow"
                   disabled={loading}
                 >
-                  {loading ? "Sending..." : "Send Email Verification"}
+                  {loading ? "Sending..." : "Create Account"}
                 </Button>
 
                 <Button 
                   variant="ghost" 
-                  onClick={() => setStep('phone')} 
+                  onClick={() => setStep('signin')} 
                   className="w-full"
                   disabled={loading}
                 >
@@ -392,7 +427,7 @@ const Auth = () => {
                 <div className="text-center">
                   <h3 className="font-semibold">Enter Verification Code</h3>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {authMode === 'signin' 
+                    {signinMethod === 'phone' || (authMode === 'signin' && phone)
                       ? `Check WhatsApp ${WHATSAPP_SENDER} for your 6-digit code sent to ${phone}`
                       : `Check your email ${email} for the 6-digit verification code`
                     }
@@ -429,10 +464,7 @@ const Auth = () => {
 
                 <Button 
                   variant="ghost" 
-                  onClick={() => {
-                    setStep(authMode === 'signin' ? 'phone' : 'email');
-                    setOtp('');
-                  }} 
+                  onClick={resetForm}
                   className="w-full"
                   disabled={loading}
                 >
