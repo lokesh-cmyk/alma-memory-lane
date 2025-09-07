@@ -25,21 +25,40 @@ const Auth = () => {
 
   const checkUserExists = async (email?: string, phone?: string) => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('user_id, phone, display_name')
-        .or(
-          email ? `user_id.in.(select id from auth.users where email='${email}')` : 
-          `phone.eq.${phone}`
-        )
-        .single();
+      if (email) {
+        // Check by attempting to get user profile - if exists, user exists
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('user_id')
+          .limit(1);
 
-      if (error && error.code !== 'PGRST116') {
-        console.error("Error checking user existence:", error);
-        return false;
+        // Try a signin attempt to see if user exists (will fail gracefully)
+        const { error: signinError } = await supabase.auth.signInWithPassword({
+          email: email,
+          password: 'dummy-password-check'
+        });
+
+        // If error is invalid_credentials, user exists but password wrong
+        // If error is invalid_login_credentials, user doesn't exist
+        const userExists = signinError?.message?.includes('Invalid login credentials') === false;
+        return userExists;
+      } else if (phone) {
+        // Check by phone in profiles table
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('user_id')
+          .eq('phone', phone)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error("Error checking phone existence:", error);
+          return false;
+        }
+
+        return !!data;
       }
-
-      return !!data;
+      
+      return false;
     } catch (err) {
       console.error("Unexpected error checking user:", err);
       return false;
@@ -190,11 +209,11 @@ const Auth = () => {
         return;
       }
 
-      // Create account with email OTP
-      const { error } = await supabase.auth.signUp({
+      // Create account with email OTP - Use signInWithOtp for OTP flow
+      const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
-        password: password.trim(),
         options: {
+          shouldCreateUser: true,
           data: {
             display_name: name.trim(),
             phone: phone.trim(),
@@ -254,7 +273,7 @@ const Auth = () => {
         verifyResult = await supabase.auth.verifyOtp({
           email: email.trim(),
           token: otp.trim(),
-          type: step === 'otp' && name ? 'signup' : 'email'
+          type: 'email'
         });
       }
 
@@ -268,20 +287,25 @@ const Auth = () => {
         return;
       }
 
-      // For signup, create/update profile
-      if (name && verifyResult.data.user) {
+      // For signup, create/update profile with phone number
+      if (verifyResult.data.user) {
         const { error: profileError } = await supabase
           .from('profiles')
           .upsert({
             user_id: verifyResult.data.user.id,
-            display_name: name.trim(),
-            phone: phone.trim(),
+            display_name: name.trim() || verifyResult.data.user.user_metadata?.display_name || '',
+            phone: phone.trim() || verifyResult.data.user.user_metadata?.phone || '',
           }, {
             onConflict: 'user_id'
           });
 
         if (profileError) {
           console.error("Error updating profile:", profileError);
+          toast({
+            title: "Profile Error",
+            description: "Account created but profile update failed. Please contact support.",
+            variant: "destructive",
+          });
         }
       }
 
