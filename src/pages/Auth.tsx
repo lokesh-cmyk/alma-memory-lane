@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Smartphone, MessageCircle, Mail, User } from "lucide-react";
+import { Smartphone, MessageCircle, Mail, User, Lock } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 const WHATSAPP_SENDER = "+14155238886";
@@ -15,25 +15,50 @@ const Auth = () => {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
-  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
-  const [signinMethod, setSigninMethod] = useState<'phone' | 'email'>('phone');
   const [step, setStep] = useState<'signin' | 'signup' | 'otp'>('signin');
+  const [signinMethod, setSigninMethod] = useState<'phone' | 'email'>('email');
+  const [otpMethod, setOtpMethod] = useState<'email' | 'whatsapp'>('email');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSendPhoneOtp = async () => {
-    if (!phone.trim()) {
+  const checkUserExists = async (email?: string, phone?: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_id, phone, display_name')
+        .or(
+          email ? `user_id.in.(select id from auth.users where email='${email}')` : 
+          `phone.eq.${phone}`
+        )
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error("Error checking user existence:", error);
+        return false;
+      }
+
+      return !!data;
+    } catch (err) {
+      console.error("Unexpected error checking user:", err);
+      return false;
+    }
+  };
+
+  const handleSignin = async () => {
+    const identifier = signinMethod === 'email' ? email.trim() : phone.trim();
+    
+    if (!identifier) {
       toast({
-        title: "Phone number required",
-        description: "Please enter your WhatsApp number to continue.",
+        title: `${signinMethod === 'email' ? 'Email' : 'Phone number'} required`,
+        description: `Please enter your ${signinMethod === 'email' ? 'email address' : 'WhatsApp number'}.`,
         variant: "destructive",
       });
       return;
     }
 
-    // Ensure E.164 format for WhatsApp/Twilio
-    if (!/^\+[1-9]\d{7,14}$/.test(phone.trim())) {
+    if (signinMethod === 'phone' && !/^\+[1-9]\d{7,14}$/.test(identifier)) {
       toast({
         title: "Invalid phone format",
         description: "Use E.164 format, e.g., +14155551234",
@@ -44,27 +69,70 @@ const Auth = () => {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        phone: phone.trim(),
-        options: {
-          channel: 'whatsapp',
-          shouldCreateUser: authMode === 'signup',
-        }
-      });
+      // Check if user exists
+      const userExists = await checkUserExists(
+        signinMethod === 'email' ? identifier : undefined,
+        signinMethod === 'phone' ? identifier : undefined
+      );
 
-      if (error) {
-        console.error("Error sending WhatsApp OTP:", error);
+      if (!userExists) {
         toast({
-          title: "Error",
-          description: error.message || "Failed to send verification code. Please try again.",
+          title: "Account not found",
+          description: "Please sign up first to create your account.",
           variant: "destructive",
         });
-      } else {
-        setStep('otp');
-        toast({
-          title: "Code sent!",
-          description: "Check your WhatsApp for the verification code.",
+        setLoading(false);
+        return;
+      }
+
+      // Send OTP based on signin method
+      if (signinMethod === 'email') {
+        const { error } = await supabase.auth.signInWithOtp({
+          email: identifier,
+          options: {
+            shouldCreateUser: false,
+          }
         });
+
+        if (error) {
+          console.error("Error sending email OTP:", error);
+          toast({
+            title: "Error",
+            description: error.message || "Failed to send verification code.",
+            variant: "destructive",
+          });
+        } else {
+          setOtpMethod('email');
+          setStep('otp');
+          toast({
+            title: "Code sent!",
+            description: "Check your email for the verification code.",
+          });
+        }
+      } else {
+        const { error } = await supabase.auth.signInWithOtp({
+          phone: identifier,
+          options: {
+            channel: 'whatsapp',
+            shouldCreateUser: false,
+          }
+        });
+
+        if (error) {
+          console.error("Error sending WhatsApp OTP:", error);
+          toast({
+            title: "Error",
+            description: error.message || "Failed to send verification code.",
+            variant: "destructive",
+          });
+        } else {
+          setOtpMethod('whatsapp');
+          setStep('otp');
+          toast({
+            title: "Code sent!",
+            description: "Check your WhatsApp for the verification code.",
+          });
+        }
       }
     } catch (err) {
       console.error("Unexpected error:", err);
@@ -78,69 +146,75 @@ const Auth = () => {
     }
   };
 
-  const handleSendEmailOtp = async () => {
-    if (authMode === 'signup') {
-      // For signup, require all fields
-      if (!email.trim() || !name.trim() || !phone.trim()) {
-        toast({
-          title: "All fields required",
-          description: "Please fill in name, email, and WhatsApp number.",
-          variant: "destructive",
-        });
-        return;
-      }
+  const handleSignup = async () => {
+    // Validate all required fields
+    if (!name.trim() || !email.trim() || !phone.trim() || !password.trim()) {
+      toast({
+        title: "All fields required",
+        description: "Please fill in name, email, phone number, and password.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-      if (!/^\+[1-9]\d{7,14}$/.test(phone.trim())) {
-        toast({
-          title: "Invalid phone format",
-          description: "Use E.164 format, e.g., +14155551234",
-          variant: "destructive",
-        });
-        return;
-      }
-    } else {
-      // For signin, only require email
-      if (!email.trim()) {
-        toast({
-          title: "Email required",
-          description: "Please enter your email address.",
-          variant: "destructive",
-        });
-        return;
-      }
+    if (!/^\+[1-9]\d{7,14}$/.test(phone.trim())) {
+      toast({
+        title: "Invalid phone format",
+        description: "Use E.164 format, e.g., +14155551234",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      toast({
+        title: "Password too short",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive",
+      });
+      return;
     }
 
     setLoading(true);
     try {
-      const otpOptions: any = {
-        shouldCreateUser: authMode === 'signup',
-        emailRedirectTo: `${window.location.origin}/`,
-      };
-
-      // Only include user data for signup
-      if (authMode === 'signup') {
-        otpOptions.data = {
-          display_name: name.trim(),
-          phone: phone.trim(),
-        };
+      // Check if user already exists
+      const userExists = await checkUserExists(email.trim());
+      
+      if (userExists) {
+        toast({
+          title: "Account already exists",
+          description: "Please sign in instead.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
       }
 
-      const { error } = await supabase.auth.signInWithOtp({
+      // Create account with email OTP
+      const { error } = await supabase.auth.signUp({
         email: email.trim(),
-        options: otpOptions
+        password: password.trim(),
+        options: {
+          data: {
+            display_name: name.trim(),
+            phone: phone.trim(),
+          },
+          emailRedirectTo: `${window.location.origin}/`,
+        }
       });
 
       if (error) {
-        console.error("Error sending email OTP:", error);
+        console.error("Error creating account:", error);
         toast({
           title: "Error",
-          description: error.message || "Failed to send verification code. Please try again.",
+          description: error.message || "Failed to create account.",
           variant: "destructive",
         });
       } else {
+        setOtpMethod('email');
         setStep('otp');
         toast({
-          title: "Code sent!",
+          title: "Account created!",
           description: "Check your email for the verification code.",
         });
       }
@@ -170,19 +244,17 @@ const Auth = () => {
     try {
       let verifyResult;
       
-      if (signinMethod === 'phone' || (authMode === 'signin' && phone)) {
-        // Phone-based signin
+      if (otpMethod === 'whatsapp') {
         verifyResult = await supabase.auth.verifyOtp({
           phone: phone.trim(),
           token: otp.trim(),
           type: 'sms'
         });
       } else {
-        // Email-based signin/signup
         verifyResult = await supabase.auth.verifyOtp({
           email: email.trim(),
           token: otp.trim(),
-          type: 'email'
+          type: step === 'otp' && name ? 'signup' : 'email'
         });
       }
 
@@ -190,14 +262,14 @@ const Auth = () => {
         console.error("Error verifying OTP:", verifyResult.error);
         toast({
           title: "Invalid code",
-          description: verifyResult.error.message || "The verification code is incorrect. Please try again.",
+          description: verifyResult.error.message || "The verification code is incorrect.",
           variant: "destructive",
         });
         return;
       }
 
-      // For email signup, update profile with name and phone
-      if (authMode === 'signup' && signinMethod === 'email' && verifyResult.data.user) {
+      // For signup, create/update profile
+      if (name && verifyResult.data.user) {
         const { error: profileError } = await supabase
           .from('profiles')
           .upsert({
@@ -210,7 +282,6 @@ const Auth = () => {
 
         if (profileError) {
           console.error("Error updating profile:", profileError);
-          // Don't block login for profile update failures
         }
       }
 
@@ -237,29 +308,30 @@ const Auth = () => {
     setEmail('');
     setPhone('');
     setName('');
+    setPassword('');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-background/80 backdrop-blur-sm border-white/20 shadow-elegant">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
+      <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm border-border shadow-elevated">
         <CardHeader className="text-center">
-          <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center shadow-glow mx-auto mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center shadow-lg mx-auto mb-4">
             {step === 'signin' ? (
-              signinMethod === 'email' ? <Mail className="w-8 h-8 text-white" /> : <Smartphone className="w-8 h-8 text-white" />
+              signinMethod === 'email' ? <Mail className="w-8 h-8 text-primary-foreground" /> : <Smartphone className="w-8 h-8 text-primary-foreground" />
             ) : step === 'signup' ? (
-              <User className="w-8 h-8 text-white" />
+              <User className="w-8 h-8 text-primary-foreground" />
             ) : (
-              <MessageCircle className="w-8 h-8 text-white" />
+              <MessageCircle className="w-8 h-8 text-primary-foreground" />
             )}
           </div>
-          <CardTitle className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
             Welcome to MeetAlma
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-muted-foreground">
             {step === 'signin' 
               ? `Sign in with your ${signinMethod === 'email' ? 'email' : 'WhatsApp number'}` 
               : step === 'signup'
-              ? 'Create your account with email'
+              ? 'Create your account'
               : 'Enter the verification code we sent you'
             }
           </CardDescription>
@@ -270,15 +342,6 @@ const Auth = () => {
               {/* Signin Method Toggle */}
               <div className="grid grid-cols-2 gap-3">
                 <Button
-                  variant={signinMethod === 'phone' ? 'default' : 'outline'}
-                  onClick={() => setSigninMethod('phone')}
-                  className="flex items-center gap-2"
-                  disabled={loading}
-                >
-                  <Smartphone className="w-4 h-4" />
-                  WhatsApp
-                </Button>
-                <Button
                   variant={signinMethod === 'email' ? 'default' : 'outline'}
                   onClick={() => setSigninMethod('email')}
                   className="flex items-center gap-2"
@@ -287,12 +350,21 @@ const Auth = () => {
                   <Mail className="w-4 h-4" />
                   Email
                 </Button>
+                <Button
+                  variant={signinMethod === 'phone' ? 'default' : 'outline'}
+                  onClick={() => setSigninMethod('phone')}
+                  className="flex items-center gap-2"
+                  disabled={loading}
+                >
+                  <Smartphone className="w-4 h-4" />
+                  WhatsApp
+                </Button>
               </div>
 
               {/* Input Field */}
               <div className="space-y-2">
-                <Label htmlFor="signin-input" className="text-sm font-medium">
-                  {signinMethod === 'email' ? 'Email Address' : 'Your WhatsApp Number'}
+                <Label htmlFor="signin-input" className="text-sm font-medium text-foreground">
+                  {signinMethod === 'email' ? 'Email Address' : 'WhatsApp Number'}
                 </Label>
                 <div className="relative">
                   {signinMethod === 'email' ? (
@@ -306,27 +378,27 @@ const Auth = () => {
                     placeholder={signinMethod === 'email' ? 'your@email.com' : 'e.g., +14155551234'}
                     value={signinMethod === 'email' ? email : phone}
                     onChange={(e) => signinMethod === 'email' ? setEmail(e.target.value) : setPhone(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 bg-background border-input text-foreground"
                     disabled={loading}
                   />
                 </div>
               </div>
 
               <Button 
-                onClick={signinMethod === 'email' ? handleSendEmailOtp : handleSendPhoneOtp} 
-                className="w-full bg-gradient-primary hover:opacity-90 text-white shadow-glow"
+                onClick={handleSignin}
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
                 disabled={loading}
               >
-                {loading ? "Sending..." : `Send ${signinMethod === 'email' ? 'Email' : 'WhatsApp'} Code`}
+                {loading ? "Checking..." : "Sign In"}
               </Button>
 
               <div className="text-center">
                 <button
                   onClick={() => setStep('signup')}
-                  className="text-sm text-primary hover:underline"
+                  className="text-sm text-primary hover:underline font-medium"
                   disabled={loading}
                 >
-                  Don't have an account? Sign up with email
+                  Don't have an account? Sign up
                 </button>
               </div>
 
@@ -340,8 +412,8 @@ const Auth = () => {
             <>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-sm font-medium">
-                    Full Name
+                  <Label htmlFor="name" className="text-sm font-medium text-foreground">
+                    Full Name *
                   </Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -351,15 +423,15 @@ const Auth = () => {
                       placeholder="Enter your full name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 bg-background border-input text-foreground"
                       disabled={loading}
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email-signup" className="text-sm font-medium">
-                    Email Address
+                  <Label htmlFor="email-signup" className="text-sm font-medium text-foreground">
+                    Email Address *
                   </Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -369,15 +441,15 @@ const Auth = () => {
                       placeholder="Enter your email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 bg-background border-input text-foreground"
                       disabled={loading}
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone-signup" className="text-sm font-medium">
-                    Your WhatsApp Number
+                  <Label htmlFor="phone-signup" className="text-sm font-medium text-foreground">
+                    WhatsApp Number *
                   </Label>
                   <div className="relative">
                     <Smartphone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -387,7 +459,25 @@ const Auth = () => {
                       placeholder="e.g., +14155551234"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 bg-background border-input text-foreground"
+                      disabled={loading}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-sm font-medium text-foreground">
+                    Password *
+                  </Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="Choose a strong password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pl-10 bg-background border-input text-foreground"
                       disabled={loading}
                     />
                   </div>
@@ -396,21 +486,17 @@ const Auth = () => {
 
               <div className="space-y-3">
                 <Button 
-                  onClick={() => {
-                    setAuthMode('signup');
-                    setSigninMethod('email');
-                    handleSendEmailOtp();
-                  }} 
-                  className="w-full bg-gradient-primary hover:opacity-90 text-white shadow-glow"
+                  onClick={handleSignup}
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
                   disabled={loading}
                 >
-                  {loading ? "Sending..." : "Create Account"}
+                  {loading ? "Creating Account..." : "Create Account"}
                 </Button>
 
                 <Button 
                   variant="ghost" 
                   onClick={() => setStep('signin')} 
-                  className="w-full"
+                  className="w-full text-foreground hover:bg-muted"
                   disabled={loading}
                 >
                   Back to Sign In
@@ -425,9 +511,9 @@ const Auth = () => {
             <>
               <div className="space-y-4">
                 <div className="text-center">
-                  <h3 className="font-semibold">Enter Verification Code</h3>
+                  <h3 className="font-semibold text-foreground">Enter Verification Code</h3>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {signinMethod === 'phone' || (authMode === 'signin' && phone)
+                    {otpMethod === 'whatsapp'
                       ? `Check WhatsApp ${WHATSAPP_SENDER} for your 6-digit code sent to ${phone}`
                       : `Check your email ${email} for the 6-digit verification code`
                     }
@@ -456,7 +542,7 @@ const Auth = () => {
               <div className="space-y-3">
                 <Button 
                   onClick={handleVerifyOtp} 
-                  className="w-full bg-gradient-primary hover:opacity-90 text-white shadow-glow"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
                   disabled={loading || otp.length !== 6}
                 >
                   {loading ? "Verifying..." : "Verify Code"}
@@ -465,7 +551,7 @@ const Auth = () => {
                 <Button 
                   variant="ghost" 
                   onClick={resetForm}
-                  className="w-full"
+                  className="w-full text-foreground hover:bg-muted"
                   disabled={loading}
                 >
                   Back
