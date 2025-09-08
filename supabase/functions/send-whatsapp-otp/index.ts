@@ -19,9 +19,14 @@ serve(async (req) => {
 
   try {
     const WHATSAPP_TOKEN = Deno.env.get('WHATSAPP_TOKEN');
+    const WHATSAPP_PHONE_NUMBER_ID = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID');
+    const WHATSAPP_TEMPLATE_NAME = Deno.env.get('WHATSAPP_TEMPLATE_NAME') || 'verification_code';
     
     if (!WHATSAPP_TOKEN) {
       throw new Error('WHATSAPP_TOKEN is not configured');
+    }
+    if (!WHATSAPP_PHONE_NUMBER_ID) {
+      throw new Error('WHATSAPP_PHONE_NUMBER_ID is not configured');
     }
 
     const { to, code }: WhatsAppOTPRequest = await req.json();
@@ -41,7 +46,7 @@ serve(async (req) => {
 
     // Send WhatsApp message via Facebook Graph API
     const whatsappResponse = await fetch(
-      `https://graph.facebook.com/v18.0/YOUR_PHONE_NUMBER_ID/messages`,
+      `https://graph.facebook.com/v18.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`,
       {
         method: 'POST',
         headers: {
@@ -53,7 +58,7 @@ serve(async (req) => {
           to: phoneNumber,
           type: 'template',
           template: {
-            name: 'verification_code', // You need to create this template in Meta Business
+            name: WHATSAPP_TEMPLATE_NAME, // Must exist in Meta Business
             language: {
               code: 'en_US'
             },

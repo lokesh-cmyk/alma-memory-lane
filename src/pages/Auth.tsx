@@ -78,41 +78,22 @@ const Auth = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const checkUserExists = async (email?: string, phone?: string) => {
+  const checkUserExists = async (_email?: string, phone?: string) => {
     try {
-      if (email) {
-        // Check by attempting to get user profile - if exists, user exists
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('user_id')
-          .limit(1);
-
-        // Try a signin attempt to see if user exists (will fail gracefully)
-        const { error: signinError } = await supabase.auth.signInWithPassword({
-          email: email,
-          password: 'dummy-password-check'
-        });
-
-        // If error is invalid_credentials, user exists but password wrong
-        // If error is invalid_login_credentials, user doesn't exist
-        const userExists = signinError?.message?.includes('Invalid login credentials') === false;
-        return userExists;
-      } else if (phone) {
-        // Check by phone in profiles table
+      if (phone) {
         const { data, error } = await supabase
           .from('profiles')
           .select('user_id')
           .eq('phone', phone)
-          .single();
+          .maybeSingle();
 
-        if (error && error.code !== 'PGRST116') {
+        if (error) {
           console.error("Error checking phone existence:", error);
           return false;
         }
 
         return !!data;
       }
-      
       return false;
     } catch (err) {
       console.error("Unexpected error checking user:", err);
@@ -143,23 +124,7 @@ const Auth = () => {
 
     setLoading(true);
     try {
-      // Check if user exists
-      const userExists = await checkUserExists(
-        signinMethod === 'email' ? identifier : undefined,
-        signinMethod === 'phone' ? identifier : undefined
-      );
-
-      if (!userExists) {
-        toast({
-          title: "Account not found",
-          description: "Please sign up first to create your account.",
-          variant: "destructive",
-        });
-        setLoading(false);
-        return;
-      }
-
-      // Send OTP based on signin method
+      // Send OTP based on signin method (no dummy password checks)
       if (signinMethod === 'email') {
         const { error } = await supabase.auth.signInWithOtp({
           email: identifier,
@@ -170,51 +135,60 @@ const Auth = () => {
         });
 
         if (error) {
-          console.error("Error sending email OTP:", error);
-          toast({
-            title: "Error",
-            description: error.message || "Failed to send verification code.",
-            variant: "destructive",
-          });
+          const msg = error.message || '';
+          if (msg.toLowerCase().includes('user')) {
+            toast({
+              title: 'Account not found',
+              description: 'Please sign up first to create your account.',
+              variant: 'destructive',
+            });
+          } else {
+            console.error('Error sending email OTP:', error);
+            toast({
+              title: 'Error',
+              description: error.message || 'Failed to send verification code.',
+              variant: 'destructive',
+            });
+          }
         } else {
           setOtpMethod('email');
           setStep('otp');
           toast({
-            title: "Code sent!",
-            description: "Check your email for the verification code.",
+            title: 'Code sent!',
+            description: 'Check your email for the verification code.',
           });
         }
       } else {
-        // Use custom WhatsApp OTP edge function
+        // Use custom WhatsApp OTP edge function (delivery only)
         const { data: otpData, error: otpError } = await supabase.functions.invoke('send-whatsapp-otp', {
-          body: { 
+          body: {
             to: identifier,
-            code: Math.floor(100000 + Math.random() * 900000).toString() // Generate 6-digit code
+            code: Math.floor(100000 + Math.random() * 900000).toString(),
           }
         });
 
         if (otpError || !otpData?.success) {
-          console.error("Error sending WhatsApp OTP:", otpError);
+          console.error('Error sending WhatsApp OTP:', otpError);
           toast({
-            title: "Error",
-            description: otpError?.message || "Failed to send WhatsApp verification code.",
-            variant: "destructive",
+            title: 'Error',
+            description: otpError?.message || 'Failed to send WhatsApp verification code.',
+            variant: 'destructive',
           });
         } else {
           setOtpMethod('whatsapp');
           setStep('otp');
           toast({
-            title: "Code sent!",
-            description: "Check your WhatsApp for the verification code.",
+            title: 'Code sent!',
+            description: 'Check your WhatsApp for the verification code.',
           });
         }
       }
     } catch (err) {
-      console.error("Unexpected error:", err);
+      console.error('Unexpected error:', err);
       toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'An unexpected error occurred. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
