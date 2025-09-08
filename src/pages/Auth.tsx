@@ -185,18 +185,19 @@ const Auth = () => {
           });
         }
       } else {
-        const { error } = await supabase.auth.signInWithOtp({
-          phone: identifier,
-          options: {
-            shouldCreateUser: false,
+        // Use custom WhatsApp OTP edge function
+        const { data: otpData, error: otpError } = await supabase.functions.invoke('send-whatsapp-otp', {
+          body: { 
+            to: identifier,
+            code: Math.floor(100000 + Math.random() * 900000).toString() // Generate 6-digit code
           }
         });
 
-        if (error) {
-          console.error("Error sending WhatsApp OTP:", error);
+        if (otpError || !otpData?.success) {
+          console.error("Error sending WhatsApp OTP:", otpError);
           toast({
             title: "Error",
-            description: error.message || "Failed to send verification code.",
+            description: otpError?.message || "Failed to send WhatsApp verification code.",
             variant: "destructive",
           });
         } else {
@@ -264,7 +265,7 @@ const Auth = () => {
         return;
       }
 
-      // Create account with email OTP - Use signInWithOtp for OTP flow
+      // Create account with email OTP
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
         options: {
@@ -273,7 +274,7 @@ const Auth = () => {
             display_name: name.trim(),
             phone: phone.trim(),
           },
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: `${window.location.origin}/auth`,
         }
       });
 
