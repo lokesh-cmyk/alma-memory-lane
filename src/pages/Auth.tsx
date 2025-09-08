@@ -165,6 +165,7 @@ const Auth = () => {
           email: identifier,
           options: {
             shouldCreateUser: false,
+            emailRedirectTo: `${window.location.origin}/auth`,
           }
         });
 
@@ -187,7 +188,6 @@ const Auth = () => {
         const { error } = await supabase.auth.signInWithOtp({
           phone: identifier,
           options: {
-            channel: 'whatsapp',
             shouldCreateUser: false,
           }
         });
