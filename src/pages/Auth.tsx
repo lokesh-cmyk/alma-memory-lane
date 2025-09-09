@@ -6,20 +6,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Smartphone, MessageCircle, Mail, User, Lock } from "lucide-react";
+import { Smartphone, MessageCircle, Mail, User } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
-const WHATSAPP_SENDER = "+14155238886";
+// Removed WHATSAPP_SENDER; using generic phone messaging
 
 const Auth = () => {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
-  const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState<'signin' | 'signup' | 'otp'>('signin');
   const [signinMethod, setSigninMethod] = useState<'phone' | 'email'>('email');
-  const [otpMethod, setOtpMethod] = useState<'email' | 'whatsapp'>('email');
+  const [otpMethod, setOtpMethod] = useState<'email' | 'whatsapp'>('email'); // using 'whatsapp' label for phone OTP
+  const [isSignupFlow, setIsSignupFlow] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -159,27 +159,35 @@ const Auth = () => {
           });
         }
       } else {
-        // Use custom WhatsApp OTP edge function (delivery only)
-        const { data: otpData, error: otpError } = await supabase.functions.invoke('send-whatsapp-otp', {
-          body: {
-            to: identifier,
-            code: Math.floor(100000 + Math.random() * 900000).toString(),
+        const { error } = await supabase.auth.signInWithOtp({
+          phone: identifier,
+          options: {
+            shouldCreateUser: false,
           }
         });
 
-        if (otpError || !otpData?.success) {
-          console.error('Error sending WhatsApp OTP:', otpError);
-          toast({
-            title: 'Error',
-            description: otpError?.message || 'Failed to send WhatsApp verification code.',
-            variant: 'destructive',
-          });
+        if (error) {
+          const msg = error.message || '';
+          if (msg.toLowerCase().includes('not found') || msg.toLowerCase().includes('no user')) {
+            toast({
+              title: 'Account not found',
+              description: 'No account with this phone. Please sign up first.',
+              variant: 'destructive',
+            });
+          } else {
+            console.error('Error sending phone OTP:', error);
+            toast({
+              title: 'Error',
+              description: error.message || 'Failed to send verification code.',
+              variant: 'destructive',
+            });
+          }
         } else {
           setOtpMethod('whatsapp');
           setStep('otp');
           toast({
             title: 'Code sent!',
-            description: 'Check your WhatsApp for the verification code.',
+            description: 'Check your phone for the verification code.',
           });
         }
       }
@@ -196,11 +204,11 @@ const Auth = () => {
   };
 
   const handleSignup = async () => {
-    // Validate all required fields
-    if (!name.trim() || !email.trim() || !phone.trim() || !password.trim()) {
+    // Validate required fields (no password needed)
+    if (!name.trim() || !email.trim() || !phone.trim()) {
       toast({
         title: "All fields required",
-        description: "Please fill in name, email, phone number, and password.",
+        description: "Please fill in name, email, and phone number.",
         variant: "destructive",
       });
       return;
@@ -215,31 +223,9 @@ const Auth = () => {
       return;
     }
 
-    if (password.length < 6) {
-      toast({
-        title: "Password too short",
-        description: "Password must be at least 6 characters long.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setLoading(true);
     try {
-      // Check if user already exists
-      const userExists = await checkUserExists(email.trim());
-      
-      if (userExists) {
-        toast({
-          title: "Account already exists",
-          description: "Please sign in instead.",
-          variant: "destructive",
-        });
-        setLoading(false);
-        return;
-      }
-
-      // Create account with email OTP
+      // Start signup with email OTP (creates account)
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
         options: {
@@ -260,6 +246,7 @@ const Auth = () => {
           variant: "destructive",
         });
       } else {
+        setIsSignupFlow(true);
         setOtpMethod('email');
         setStep('otp');
         toast({
@@ -317,7 +304,7 @@ const Auth = () => {
         return;
       }
 
-      // For signup, create/update profile with phone number
+      // Upsert profile info
       if (verifyResult.data.user) {
         const { error: profileError } = await supabase
           .from('profiles')
@@ -336,6 +323,31 @@ const Auth = () => {
             description: "Account created but profile update failed. Please contact support.",
             variant: "destructive",
           });
+        }
+      }
+
+      // If this is signup flow and email was just verified, now link the phone to the auth user
+      if (otpMethod === 'email' && isSignupFlow && phone.trim()) {
+        const { error: phoneLinkError } = await supabase.auth.updateUser({
+          phone: phone.trim(),
+        });
+        if (phoneLinkError) {
+          console.error('Error sending phone verification:', phoneLinkError);
+          toast({
+            title: 'Phone link failed',
+            description: phoneLinkError.message || 'Could not send phone verification code.',
+            variant: 'destructive',
+          });
+        } else {
+          // Ask user to verify the phone number now
+          setOtp('');
+          setOtpMethod('whatsapp');
+          toast({
+            title: 'Verify phone',
+            description: `Enter the 6-digit code sent to ${phone} to link your number.`,
+          });
+          setLoading(false);
+          return; // Wait for phone OTP verification before navigating
         }
       }
 
@@ -396,7 +408,7 @@ const Auth = () => {
     setEmail('');
     setPhone('');
     setName('');
-    setPassword('');
+    setIsSignupFlow(false);
   };
 
   return (
@@ -417,7 +429,7 @@ const Auth = () => {
           </CardTitle>
           <CardDescription className="text-muted-foreground">
             {step === 'signin' 
-              ? `Sign in with your ${signinMethod === 'email' ? 'email' : 'WhatsApp number'}` 
+              ? `Sign in with your ${signinMethod === 'email' ? 'email' : 'phone number'}` 
               : step === 'signup'
               ? 'Create your account'
               : 'Enter the verification code we sent you'
@@ -445,7 +457,7 @@ const Auth = () => {
                   disabled={loading}
                 >
                   <Smartphone className="w-4 h-4" />
-                  WhatsApp
+                  Phone
                 </Button>
               </div>
 
@@ -528,7 +540,7 @@ const Auth = () => {
 
               {signinMethod === 'phone' && (
                 <div className="text-center text-sm text-muted-foreground">
-                  We'll send a verification code to your WhatsApp from {WHATSAPP_SENDER}
+                  We'll send a verification code to your phone number.
                 </div>
               )}
             </>
@@ -573,7 +585,7 @@ const Auth = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="phone-signup" className="text-sm font-medium text-foreground">
-                    WhatsApp Number *
+                    Phone Number *
                   </Label>
                   <div className="relative">
                     <Smartphone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -589,23 +601,6 @@ const Auth = () => {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium text-foreground">
-                    Password *
-                  </Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="Choose a strong password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 bg-background border-input text-foreground"
-                      disabled={loading}
-                    />
-                  </div>
-                </div>
               </div>
 
               <div className="space-y-3">
@@ -670,7 +665,7 @@ const Auth = () => {
                   <h3 className="font-semibold text-foreground">Enter Verification Code</h3>
                   <p className="text-sm text-muted-foreground mt-1">
                     {otpMethod === 'whatsapp'
-                      ? `Check WhatsApp ${WHATSAPP_SENDER} for your 6-digit code sent to ${phone}`
+                      ? `Check your phone ${phone} for the 6-digit verification code`
                       : `Check your email ${email} for the 6-digit verification code`
                     }
                   </p>
