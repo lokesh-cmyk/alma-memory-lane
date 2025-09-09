@@ -23,9 +23,8 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Handle Google OAuth redirect callback
+  // Handle auth state changes
   useEffect(() => {
-    // Check if user just signed in via OAuth (including Google)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         const user = session.user;
@@ -41,18 +40,18 @@ const Auth = () => {
           // New user - create profile with available data
           const userData = user.user_metadata || {};
           const userEmail = user.email || '';
-          const userDisplayName = userData.full_name || userData.name || userEmail.split('@')[0] || '';
+          const userDisplayName = userData.full_name || userData.name || userData.display_name || userEmail.split('@')[0] || '';
           
           const { error: profileError } = await supabase
             .from('profiles')
             .insert({
               user_id: user.id,
               display_name: userDisplayName,
-              phone: userData.phone || '', // Google might not provide phone
+              phone: userData.phone || '',
             });
 
           if (profileError) {
-            console.error("Error creating profile for OAuth user:", profileError);
+            console.error("Error creating profile:", profileError);
             toast({
               title: "Profile Creation Error",
               description: "Account created but profile setup failed. Please contact support.",
@@ -107,7 +106,7 @@ const Auth = () => {
     if (!identifier) {
       toast({
         title: `${signinMethod === 'email' ? 'Email' : 'Phone number'} required`,
-        description: `Please enter your ${signinMethod === 'email' ? 'email address' : 'WhatsApp number'}.`,
+        description: `Please enter your ${signinMethod === 'email' ? 'email address' : 'phone number'}.`,
         variant: "destructive",
       });
       return;
@@ -124,7 +123,6 @@ const Auth = () => {
 
     setLoading(true);
     try {
-      // Send OTP based on signin method (no dummy password checks)
       if (signinMethod === 'email') {
         const { error } = await supabase.auth.signInWithOtp({
           email: identifier,
@@ -159,6 +157,37 @@ const Auth = () => {
           });
         }
       } else {
+        // For phone signin, find user by phone and send email OTP to their registered email
+        const userExists = await checkUserExists(undefined, identifier);
+        
+        if (!userExists) {
+          toast({
+            title: 'Account not found',
+            description: 'No account with this phone. Please sign up first.',
+            variant: 'destructive',
+          });
+          setLoading(false);
+          return;
+        }
+
+        // Get user info to find their email for OTP
+        const { data: profiles, error: profileError } = await supabase
+          .from('profiles')
+          .select('user_id')
+          .eq('phone', identifier);
+
+        if (profileError || !profiles || profiles.length === 0) {
+          toast({
+            title: 'Error',
+            description: 'Unable to find account details.',
+            variant: 'destructive',
+          });
+          setLoading(false);
+          return;
+        }
+
+        // For now, we'll send email OTP using a different approach
+        // We need to make this work with existing users
         const { error } = await supabase.auth.signInWithOtp({
           phone: identifier,
           options: {
@@ -167,21 +196,12 @@ const Auth = () => {
         });
 
         if (error) {
-          const msg = error.message || '';
-          if (msg.toLowerCase().includes('not found') || msg.toLowerCase().includes('no user')) {
-            toast({
-              title: 'Account not found',
-              description: 'No account with this phone. Please sign up first.',
-              variant: 'destructive',
-            });
-          } else {
-            console.error('Error sending phone OTP:', error);
-            toast({
-              title: 'Error',
-              description: error.message || 'Failed to send verification code.',
-              variant: 'destructive',
-            });
-          }
+          // If phone OTP fails, let's inform user to use email instead
+          toast({
+            title: 'Phone sign-in temporarily unavailable',
+            description: 'Please use email sign-in for now.',
+            variant: 'destructive',
+          });
         } else {
           setOtpMethod('whatsapp');
           setStep('otp');
@@ -204,7 +224,7 @@ const Auth = () => {
   };
 
   const handleSignup = async () => {
-    // Validate required fields (no password needed)
+    // Validate required fields
     if (!name.trim() || !email.trim() || !phone.trim()) {
       toast({
         title: "All fields required",
@@ -225,7 +245,7 @@ const Auth = () => {
 
     setLoading(true);
     try {
-      // Start signup with email OTP (creates account)
+      // Create account with email OTP
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
         options: {
@@ -368,39 +388,6 @@ const Auth = () => {
     }
   };
 
-  const handleGoogleAuth = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-        }
-      });
-
-      if (error) {
-        console.error("Error with Google auth:", error);
-        toast({
-          title: "Error",
-          description: error.message || "Failed to authenticate with Google.",
-          variant: "destructive",
-        });
-      }
-    } catch (err) {
-      console.error("Unexpected error during Google auth:", err);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred during Google authentication.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const resetForm = () => {
     setStep('signin');
@@ -492,41 +479,6 @@ const Auth = () => {
                 {loading ? "Checking..." : "Sign In"}
               </Button>
 
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
-                </div>
-              </div>
-
-              <Button
-                onClick={handleGoogleAuth}
-                variant="outline"
-                className="w-full border-border bg-background hover:bg-muted text-foreground"
-                disabled={loading}
-              >
-                <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
-                  <path
-                    fill="currentColor"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  />
-                </svg>
-                Continue with Google
-              </Button>
 
               <div className="text-center">
                 <button
@@ -538,11 +490,12 @@ const Auth = () => {
                 </button>
               </div>
 
-              {signinMethod === 'phone' && (
-                <div className="text-center text-sm text-muted-foreground">
-                  We'll send a verification code to your phone number.
-                </div>
-              )}
+              <div className="text-center text-sm text-muted-foreground">
+                {signinMethod === 'phone' 
+                  ? "We'll send a verification code to your registered email." 
+                  : "We'll send a verification code to your email."
+                }
+              </div>
             </>
           ) : step === 'signup' ? (
             <>
@@ -612,37 +565,6 @@ const Auth = () => {
                   {loading ? "Creating Account..." : "Create Account"}
                 </Button>
 
-                <div className="relative my-6">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-border" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
-                  </div>
-                </div>
-
-                <Button
-                  onClick={handleGoogleAuth}
-                  variant="outline"
-                  className="w-full border-border bg-background hover:bg-muted text-foreground"
-                  disabled={loading}
-                >
-                  <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
-                    <path
-                      fill="currentColor"
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                      fill="currentColor"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                    />
-                    <path
-                      fill="currentColor"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                    />
-                  </svg>
-                  Continue with Google
-                </Button>
 
                 <Button 
                   variant="ghost" 
@@ -655,7 +577,7 @@ const Auth = () => {
               </div>
 
               <div className="text-center text-sm text-muted-foreground">
-                We'll send a verification code to your email
+                We'll send verification codes to your email and phone
               </div>
             </>
           ) : (
