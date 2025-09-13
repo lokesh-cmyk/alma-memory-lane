@@ -9,7 +9,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import { Smartphone, MessageCircle, Mail, User, Lock } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
-const WHATSAPP_SENDER = "+14155238886";
+const WHATSAPP_SENDER = "+15556040676";
 
 const Auth = () => {
   const [phone, setPhone] = useState("");
