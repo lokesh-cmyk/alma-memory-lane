@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+//TODO:landing page has to be done
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
