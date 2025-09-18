@@ -54,7 +54,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <Brain className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-xl text-blue-500 font-bold bg-gradient-primary bg-clip-text">
+              <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                 MeetAlma
               </h1>
               <p className="text-xs text-muted-foreground">Memory Companion</p>
@@ -79,7 +79,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             <Button
               variant="outline"
               size="sm"
-              className="gap-2 bg-gradient-primary text-primary border-0 hover:opacity-90"
+              className="gap-2 bg-gradient-primary text-primary-foreground border-0 hover:opacity-90"
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">Add Memory</span>
