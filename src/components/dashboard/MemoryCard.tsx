@@ -23,6 +23,7 @@ interface Memory {
   timestamp: string;
   emotions: string[];
   tags: string[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata: Record<string, any>;
 }
 

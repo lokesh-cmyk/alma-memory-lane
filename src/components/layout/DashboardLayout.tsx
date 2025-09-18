@@ -54,6 +54,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <Brain className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
+              {/* color fixes */}
               <h1 className="text-xl text-blue-500 font-bold bg-gradient-primary bg-clip-text">
                 MeetAlma
               </h1>
@@ -75,7 +76,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 <Moon className="w-4 h-4" />
               )}
             </Button>
-
+{/* button fixes! */}
             <Button
               variant="outline"
               size="sm"
