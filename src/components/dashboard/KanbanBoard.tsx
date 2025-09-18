@@ -28,6 +28,7 @@ interface DatabaseMemory {
   timestamp: string;
   emotions: string[];
   tags: string[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata: any;
   user_id: string;
   created_at: string;
