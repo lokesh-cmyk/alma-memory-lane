@@ -10,7 +10,6 @@ import {
   FileIcon, 
   Link as LinkIcon,
   Expand,
-  Edit3,
   Trash2,
   Clock,
   Play,
@@ -150,72 +149,86 @@ export const MemoryCard = ({ memory }: MemoryCardProps) => {
       case "voice": {
         const audioUrl = mediaItem?.file_url || memory.metadata?.audioUrl;
         const transcription = mediaItem?.transcription || memory.content;
-        return (
-          <div className="relative">
-            <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-xl p-4 border border-emerald-200/50">
-              <div className="flex items-center gap-3">
-                <motion.div 
-                  className="p-2.5 bg-emerald-500/20 rounded-full"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Play className="w-4 h-4 text-emerald-600" />
-                </motion.div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <Volume2 className="w-4 h-4 text-emerald-600" />
-                    <span className="text-sm font-medium text-emerald-700">Voice Note</span>
-                  </div>
-                  {memory.metadata?.duration && (
-                    <div className="text-xs text-emerald-600 mt-1">
-                      {Math.floor(memory.metadata.duration / 60)}:{(memory.metadata.duration % 60).toString().padStart(2, '0')}
+        
+        if (audioUrl || transcription) {
+          return (
+            <div className="relative">
+              <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-xl p-4 border border-emerald-200/50">
+                <div className="flex items-center gap-3">
+                  <motion.div 
+                    className="p-2.5 bg-emerald-500/20 rounded-full"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Play className="w-4 h-4 text-emerald-600" />
+                  </motion.div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <Volume2 className="w-4 h-4 text-emerald-600" />
+                      <span className="text-sm font-medium text-emerald-700">Voice Note</span>
                     </div>
+                    {mediaItem?.file_size && (
+                      <div className="text-xs text-emerald-600 mt-1">
+                        {(mediaItem.file_size / 1024).toFixed(0)} KB
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Waveform visualization placeholder */}
+                <div className="mt-3 flex items-center gap-1 opacity-60">
+                  {Array.from({ length: 20 }).map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="w-1 bg-emerald-400 rounded-full"
+                      style={{ height: Math.random() * 16 + 4 }}
+                      animate={{ scaleY: [1, 1.2, 1] }}
+                      transition={{ 
+                        duration: 2, 
+                        repeat: Infinity, 
+                        delay: i * 0.1,
+                        ease: "easeInOut" 
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        }
+        break;
+      }
+
+      case "document": {
+        const documentUrl = mediaItem?.file_url || memory.metadata?.url;
+        const fileSize = mediaItem?.file_size || memory.metadata?.fileSize;
+        const fileName = memory.metadata?.filename || 
+                        (documentUrl ? documentUrl.split('/').pop()?.split('?')[0] : null) || 
+                        "Document";
+        
+        if (documentUrl || fileSize || fileName !== "Document") {
+          return (
+            <div className="bg-gradient-to-r from-purple-500/10 to-indigo-500/10 rounded-xl p-4 border border-purple-200/50">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-purple-500/20 rounded-full">
+                  <FileIcon className="w-4 h-4 text-purple-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-purple-700 truncate">
+                    {fileName}
+                  </p>
+                  {fileSize && (
+                    <p className="text-xs text-purple-600">
+                      {(fileSize / 1024 / 1024).toFixed(2)} MB
+                    </p>
                   )}
                 </div>
               </div>
-              
-              {/* Waveform visualization placeholder */}
-              <div className="mt-3 flex items-center gap-1 opacity-60">
-                {Array.from({ length: 20 }).map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="w-1 bg-emerald-400 rounded-full"
-                    style={{ height: Math.random() * 16 + 4 }}
-                    animate={{ scaleY: [1, 1.2, 1] }}
-                    transition={{ 
-                      duration: 2, 
-                      repeat: Infinity, 
-                      delay: i * 0.1,
-                      ease: "easeInOut" 
-                    }}
-                  />
-                ))}
-              </div>
             </div>
-          </div>
-        );
+          );
+        }
+        break;
       }
-
-      case "document":
-        return (
-          <div className="bg-gradient-to-r from-purple-500/10 to-indigo-500/10 rounded-xl p-4 border border-purple-200/50">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-purple-500/20 rounded-full">
-                <FileIcon className="w-4 h-4 text-purple-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-purple-700 truncate">
-                  {memory.metadata?.filename || "Document"}
-                </p>
-                {memory.metadata?.fileSize && (
-                  <p className="text-xs text-purple-600">
-                    {(memory.metadata.fileSize / 1024 / 1024).toFixed(1)} MB
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        );
 
       case "url":
         return (
@@ -366,17 +379,6 @@ export const MemoryCard = ({ memory }: MemoryCardProps) => {
                 }}
               >
                 <Expand className="w-3.5 h-3.5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 hover:bg-white/80 dark:hover:bg-gray-800/80 backdrop-blur-sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  // TODO: Implement edit functionality
-                }}
-              >
-                <Edit3 className="w-3.5 h-3.5" />
               </Button>
               <Button
                 variant="ghost"

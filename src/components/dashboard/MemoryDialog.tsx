@@ -10,7 +10,6 @@ import {
   FileIcon, 
   Link as LinkIcon,
   Clock,
-  Edit3,
   Trash2,
   Download
 } from "lucide-react";
@@ -234,15 +233,6 @@ export const MemoryDialog = ({ memory, open, onClose }: MemoryDialogProps) => {
               </div>
             </div>
             <div className="flex gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  // TODO: Implement edit functionality
-                }}
-              >
-                <Edit3 className="w-4 h-4" />
-              </Button>
               <Button
                 variant="ghost"
                 size="sm"
