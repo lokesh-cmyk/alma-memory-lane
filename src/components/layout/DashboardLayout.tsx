@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "@/hooks/use-toast";
+import { CreateMemoryDialog } from "@/components/dashboard/CreateMemoryDialog";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -22,6 +23,7 @@ interface DashboardLayoutProps {
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { user } = useAuth();
   const { theme, setTheme } = useTheme();
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -80,6 +82,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               variant="outline"
               size="sm"
               className="gap-2 border-0 hover:opacity-90"
+              onClick={() => setIsCreateDialogOpen(true)}
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">Add Memory</span>
@@ -121,6 +124,15 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </p>
         </div>
       </footer>
+
+      <CreateMemoryDialog
+        open={isCreateDialogOpen}
+        onClose={() => setIsCreateDialogOpen(false)}
+        onMemoryCreated={() => {
+          // Trigger a refresh of memories - this will be handled by the parent
+          window.location.reload();
+        }}
+      />
     </div>
   );
 };

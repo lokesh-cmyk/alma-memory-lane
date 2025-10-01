@@ -11,6 +11,14 @@ import { Sparkles, Calendar, Clock, Archive } from "lucide-react";
 
 export type ViewMode = "daily" | "weekly" | "monthly";
 
+interface MemoryMedia {
+  id: string;
+  file_url: string;
+  file_type: string;
+  file_size: number | null;
+  transcription: string | null;
+}
+
 interface Memory {
   id: string;
   content: string;
@@ -19,6 +27,7 @@ interface Memory {
   emotions: string[];
   tags: string[];
   metadata: Record<string, any>;
+  media?: MemoryMedia[];
 }
 
 interface DatabaseMemory {
@@ -78,22 +87,27 @@ export const KanbanBoard = () => {
 
   const fetchMemories = async () => {
     try {
+      // Fetch memories with associated media
       const { data, error } = await supabase
         .from('memories')
-        .select('*')
+        .select(`
+          *,
+          media:memory_media(*)
+        `)
         .order('timestamp', { ascending: false });
 
       if (error) throw error;
       
       // Transform database memories to component format
-      const transformedMemories: Memory[] = (data || []).map((dbMemory: DatabaseMemory) => ({
+      const transformedMemories: Memory[] = (data || []).map((dbMemory: any) => ({
         id: dbMemory.id,
         content: dbMemory.content || "",
         type: dbMemory.type as "text" | "voice" | "photo" | "document" | "url",
         timestamp: dbMemory.timestamp,
         emotions: dbMemory.emotions || [],
         tags: dbMemory.tags || [],
-        metadata: dbMemory.metadata || {}
+        metadata: dbMemory.metadata || {},
+        media: dbMemory.media || []
       }));
       
       setMemories(transformedMemories);

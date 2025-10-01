@@ -15,6 +15,14 @@ import {
   Download
 } from "lucide-react";
 
+interface MemoryMedia {
+  id: string;
+  file_url: string;
+  file_type: string;
+  file_size: number | null;
+  transcription: string | null;
+}
+
 interface Memory {
   id: string;
   content: string;
@@ -23,6 +31,7 @@ interface Memory {
   emotions: string[];
   tags: string[];
   metadata: Record<string, any>;
+  media?: MemoryMedia[];
 }
 
 interface MemoryDialogProps {
@@ -63,13 +72,15 @@ export const MemoryDialog = ({ memory, open, onClose }: MemoryDialogProps) => {
   const typeColor = typeColors[memory.type];
 
   const renderContent = () => {
+    const mediaItem = memory.media?.[0];
+    
     switch (memory.type) {
       case "photo":
         return (
           <div className="space-y-4">
-            {memory.metadata?.url && (
+            {(mediaItem?.file_url || memory.metadata?.url) && (
               <img
-                src={memory.metadata.url}
+                src={mediaItem?.file_url || memory.metadata.url}
                 alt="Memory"
                 className="w-full max-h-96 object-contain rounded-lg"
               />
@@ -93,17 +104,17 @@ export const MemoryDialog = ({ memory, open, onClose }: MemoryDialogProps) => {
       case "voice":
         return (
           <div className="space-y-4">
-            {memory.metadata?.audioUrl && (
+            {(mediaItem?.file_url || memory.metadata?.audioUrl) && (
               <audio controls className="w-full">
-                <source src={memory.metadata.audioUrl} type="audio/mpeg" />
+                <source src={mediaItem?.file_url || memory.metadata.audioUrl} type="audio/mpeg" />
                 Your browser does not support the audio element.
               </audio>
             )}
-            {memory.content && (
+            {(mediaItem?.transcription || memory.content) && (
               <div className="bg-muted/50 p-3 rounded-lg">
                 <h4 className="font-medium text-sm mb-2">Transcript</h4>
                 <p className="text-foreground leading-relaxed whitespace-pre-wrap">
-                  {memory.content}
+                  {mediaItem?.transcription || memory.content}
                 </p>
               </div>
             )}
@@ -117,16 +128,20 @@ export const MemoryDialog = ({ memory, open, onClose }: MemoryDialogProps) => {
               <FileIcon className="w-8 h-8" style={{ color: typeColor }} />
               <div className="flex-1">
                 <h4 className="font-medium">{memory.metadata?.filename || "Document"}</h4>
-                {memory.metadata?.fileSize && (
+                {(mediaItem?.file_size || memory.metadata?.fileSize) && (
                   <p className="text-sm text-muted-foreground">
-                    {(memory.metadata.fileSize / 1024 / 1024).toFixed(2)} MB
+                    {((mediaItem?.file_size || memory.metadata.fileSize) / 1024 / 1024).toFixed(2)} MB
                   </p>
                 )}
               </div>
-              <Button variant="outline" size="sm">
-                <Download className="w-4 h-4 mr-2" />
-                Download
-              </Button>
+              {(mediaItem?.file_url || memory.metadata?.url) && (
+                <Button variant="outline" size="sm" asChild>
+                  <a href={mediaItem?.file_url || memory.metadata?.url} download>
+                    <Download className="w-4 h-4 mr-2" />
+                    Download
+                  </a>
+                </Button>
+              )}
             </div>
             {memory.content && (
               <p className="text-foreground leading-relaxed whitespace-pre-wrap">

@@ -22,6 +22,14 @@ import {
 import { MemoryDialog } from "./MemoryDialog";
 import { motion } from "framer-motion";
 
+interface MemoryMedia {
+  id: string;
+  file_url: string;
+  file_type: string;
+  file_size: number | null;
+  transcription: string | null;
+}
+
 interface Memory {
   id: string;
   content: string;
@@ -31,6 +39,7 @@ interface Memory {
   tags: string[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata: Record<string, any>;
+  media?: MemoryMedia[];
 }
 
 interface MemoryCardProps {
@@ -105,17 +114,12 @@ export const MemoryCard = ({ memory }: MemoryCardProps) => {
 
   const primaryEmotion = getPrimaryEmotion();
 
-  // Handle media URLs - construct full URL if relative
-  const getMediaUrl = (url: string) => {
-    if (!url) return null;
-    if (url.startsWith('http')) return url;
-    return `${process.env.REACT_APP_SUPABASE_URL}/storage/v1/object/public/${url}`;
-  };
-
   const renderMediaPreview = () => {
+    const mediaItem = memory.media?.[0];
+    
     switch (memory.type) {
       case "photo": {
-        const imageUrl = getMediaUrl(memory.metadata?.url || memory.metadata?.thumbnail);
+        const imageUrl = mediaItem?.file_url || memory.metadata?.url;
         if (imageUrl) {
           return (
             <div className="relative overflow-hidden rounded-xl group">
@@ -144,7 +148,8 @@ export const MemoryCard = ({ memory }: MemoryCardProps) => {
       }
 
       case "voice": {
-        const audioUrl = getMediaUrl(memory.metadata?.audioUrl);
+        const audioUrl = mediaItem?.file_url || memory.metadata?.audioUrl;
+        const transcription = mediaItem?.transcription || memory.content;
         return (
           <div className="relative">
             <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-xl p-4 border border-emerald-200/50">
