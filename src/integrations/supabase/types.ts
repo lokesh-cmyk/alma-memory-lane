@@ -91,6 +91,24 @@ export type Database = {
           },
         ]
       }
+      n8n_chat_histories: {
+        Row: {
+          id: number
+          message: Json
+          session_id: string
+        }
+        Insert: {
+          id?: number
+          message: Json
+          session_id: string
+        }
+        Update: {
+          id?: number
+          message?: Json
+          session_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -119,6 +137,48 @@ export type Database = {
           phone?: string | null
           preferences?: Json | null
           timezone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reminders: {
+        Row: {
+          created_at: string
+          event_date: string
+          event_description: string | null
+          event_name: string
+          id: string
+          reminder_sent: boolean | null
+          reminder_time: string | null
+          tags: string[] | null
+          time_reminder_sent: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_date: string
+          event_description?: string | null
+          event_name: string
+          id?: string
+          reminder_sent?: boolean | null
+          reminder_time?: string | null
+          tags?: string[] | null
+          time_reminder_sent?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_date?: string
+          event_description?: string | null
+          event_name?: string
+          id?: string
+          reminder_sent?: boolean | null
+          reminder_time?: string | null
+          tags?: string[] | null
+          time_reminder_sent?: boolean | null
           updated_at?: string
           user_id?: string
         }
