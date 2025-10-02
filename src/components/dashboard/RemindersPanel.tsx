@@ -33,13 +33,13 @@ export const RemindersPanel = () => {
       if (!user) return;
 
       const { data, error } = await supabase
-        .from("reminders")
+        .from("reminders" as any)
         .select("*")
         .eq("user_id", user.id)
-        .order("event_date", { ascending: true }) as { data: Reminder[] | null; error: any };
+        .order("event_date", { ascending: true });
 
       if (error) throw error;
-      setReminders(data || []);
+      setReminders(data as any || []);
     } catch (error) {
       console.error("Error fetching reminders:", error);
       toast({
@@ -55,9 +55,9 @@ export const RemindersPanel = () => {
   const deleteReminder = async (id: string) => {
     try {
       const { error } = await supabase
-        .from("reminders")
+        .from("reminders" as any)
         .delete()
-        .eq("id", id) as { error: any };
+        .eq("id", id);
 
       if (error) throw error;
 
