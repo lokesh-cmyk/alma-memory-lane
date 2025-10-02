@@ -88,6 +88,20 @@ export const AnalyticsDashboard = () => {
     );
   }
 
+  if (analytics.length === 0) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center text-muted-foreground py-8">
+            <Smile className="w-12 h-12 mx-auto mb-2 opacity-50" />
+            <p className="text-lg font-medium">No analytics data yet</p>
+            <p className="text-sm mt-2">Start creating memories to see your analytics!</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

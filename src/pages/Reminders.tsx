@@ -1,7 +1,20 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { RemindersPanel } from "@/components/dashboard/RemindersPanel";
+import { supabase } from "@/integrations/supabase/client";
 
 const Reminders = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        navigate("/auth");
+      }
+    });
+  }, [navigate]);
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
