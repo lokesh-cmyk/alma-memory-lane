@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
+import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Analytics from "./pages/Analytics";
 import Reminders from "./pages/Reminders";
@@ -23,7 +24,8 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<Landing />} />
+              <Route path="/dashboard" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/reminders" element={<Reminders />} />

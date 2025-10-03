@@ -1,4 +1,5 @@
 import { ReactNode, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -6,9 +7,8 @@ import {
   Brain, 
   LogOut, 
   Plus, 
-  Search, 
   BarChart3, 
-  Settings,
+  Bell,
   Moon,
   Sun
 } from "lucide-react";
@@ -23,6 +23,7 @@ interface DashboardLayoutProps {
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { user } = useAuth();
   const { theme, setTheme } = useTheme();
+  const navigate = useNavigate();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const handleSignOut = async () => {
@@ -38,6 +39,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         title: "Signed out successfully",
         description: "Come back soon!",
       });
+      navigate("/");
     }
   };
 
@@ -92,9 +94,20 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               variant="ghost"
               size="sm"
               className="gap-2"
+              onClick={() => navigate("/analytics")}
             >
               <BarChart3 className="w-4 h-4" />
               <span className="hidden sm:inline">Analytics</span>
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-2"
+              onClick={() => navigate("/reminders")}
+            >
+              <Bell className="w-4 h-4" />
+              <span className="hidden sm:inline">Reminders</span>
             </Button>
 
             <Button
