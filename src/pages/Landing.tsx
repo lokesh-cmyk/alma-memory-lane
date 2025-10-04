@@ -16,13 +16,7 @@ const Landing = () => {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { scrollY } = useScroll();
-  
-  // Navbar animations based on scroll
-  const navbarPadding = useTransform(scrollY, [0, 100], ["1.5rem", "0.75rem"]);
-  const navbarScale = useTransform(scrollY, [0, 100], [1, 0.95]);
-  const navbarBlur = useTransform(scrollY, [0, 100], [8, 16]);
   
   // Mascot animations based on scroll
   const mascotY = useTransform(scrollY, [0, 300, 600, 900], [100, -20, 100, -20]);
