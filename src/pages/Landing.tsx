@@ -78,35 +78,36 @@ const Landing = () => {
         </div>
       </motion.div>
 
-      <div className="relative z-10 container mx-auto px-4 pt-32 pb-20" id="hero">
-        {/* Hero Section with Animated Background */}
+      {/* Hero Section with Animated Background */}
+      <div className="relative w-full min-h-screen flex items-center justify-center overflow-hidden" id="hero">
+        {/* Full-width Animated Background */}
+        <div className="absolute inset-0 w-full h-full">
+          <AnimatedBackground />
+        </div>
+        
+        {/* Overlay for better text visibility */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-background/90" />
+
+        {/* Hero Content */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center max-w-5xl mx-auto mb-32 relative"
+          className="relative z-10 text-center max-w-5xl mx-auto px-4 py-20"
         >
-          {/* Animated Background */}
-          <div className="absolute inset-0 -z-10 overflow-hidden rounded-3xl">
-            <AnimatedBackground />
-          </div>
-          
-          {/* Overlay for better text visibility */}
-          <div className="absolute inset-0 -z-10 bg-gradient-to-b from-background/80 via-background/60 to-background/80 rounded-3xl" />
-
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className="w-24 h-24 bg-gradient-to-br from-primary to-primary-glow rounded-3xl flex items-center justify-center shadow-glow mx-auto mb-8 relative z-10"
+            className="w-24 h-24 bg-gradient-to-br from-primary to-primary-glow rounded-3xl flex items-center justify-center shadow-glow mx-auto mb-8"
           >
             <Sparkles className="w-12 h-12 text-white" />
           </motion.div>
 
-          <h1 className="text-6xl md:text-8xl font-extrabold mb-8 bg-gradient-to-r from-foreground via-foreground to-foreground/60 bg-clip-text text-transparent leading-tight relative z-10">
+          <h1 className="text-6xl md:text-8xl font-extrabold mb-8 bg-gradient-to-r from-foreground via-foreground to-foreground/60 bg-clip-text text-transparent leading-tight">
             Meet Alma
           </h1>
           
-          <p className="text-xl md:text-3xl text-muted-foreground mb-12 leading-relaxed font-light relative z-10">
+          <p className="text-xl md:text-3xl text-muted-foreground mb-12 leading-relaxed font-light max-w-3xl mx-auto">
             Your AI-powered personal memory companion.<br />
             <span className="font-medium bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
               Never forget the moments that matter.
@@ -114,11 +115,11 @@ const Landing = () => {
           </p>
 
           {!user ? (
-            <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
                 size="lg"
                 onClick={() => navigate("/auth")}
-                className="text-lg px-10 py-7 rounded-full bg-gradient-to-r from-primary to-primary-glow hover:shadow-glow transition-all duration-300 hover:scale-105"
+                className="text-lg px-10 py-7 rounded-full bg-gradient-to-r from-primary to-primary-glow hover:shadow-glow transition-all duration-300 hover:scale-105 cursor-pointer"
               >
                 Get Started Free
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -127,7 +128,7 @@ const Landing = () => {
                 size="lg"
                 variant="outline"
                 onClick={() => navigate("/auth")}
-                className="text-lg px-10 py-7 rounded-full border-2 hover:bg-primary/5"
+                className="text-lg px-10 py-7 rounded-full border-2 hover:bg-primary/5 cursor-pointer"
               >
                 Watch Demo
               </Button>
@@ -136,14 +137,13 @@ const Landing = () => {
             <Button
               size="lg"
               onClick={() => navigate("/dashboard")}
-              className="text-lg px-10 py-7 rounded-full bg-gradient-to-r from-primary to-primary-glow hover:shadow-glow transition-all duration-300 hover:scale-105 relative z-10"
+              className="text-lg px-10 py-7 rounded-full bg-gradient-to-r from-primary to-primary-glow hover:shadow-glow transition-all duration-300 hover:scale-105 cursor-pointer"
             >
               Go to Dashboard
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           )}
         </motion.div>
-
       </div>
 
       {/* Bento Grid Features Section */}
@@ -156,15 +156,14 @@ const Landing = () => {
         <AboutSection />
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 pb-20">
-
+      <div className="relative z-10 container mx-auto px-4 py-20">
         {/* CTA Banner */}
         <motion.div
           id="cta"
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="relative max-w-5xl mx-auto mb-32 overflow-hidden rounded-[3rem] border border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-background p-12 md:p-16"
+          className="relative max-w-5xl mx-auto mb-20 overflow-hidden rounded-[3rem] border border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-background p-12 md:p-16"
         >
           {/* Texture Overlay */}
           <div className="absolute inset-0 texture-overlay opacity-30" />
@@ -182,7 +181,7 @@ const Landing = () => {
             <Button
               size="lg"
               onClick={() => navigate("/auth")}
-              className="text-lg px-10 py-7 rounded-full bg-gradient-to-r from-primary to-primary-glow hover:shadow-glow transition-all duration-300 hover:scale-105"
+              className="text-lg px-10 py-7 rounded-full bg-gradient-to-r from-primary to-primary-glow hover:shadow-glow transition-all duration-300 hover:scale-105 cursor-pointer"
             >
               Start Your Journey
               <ArrowRight className="ml-2 h-5 w-5" />
@@ -201,7 +200,6 @@ const Landing = () => {
             className="absolute -bottom-20 -left-20 w-40 h-40 border border-primary-glow/20 rounded-full"
           />
         </motion.div>
-
       </div>
 
       {/* Minimal Footer */}
