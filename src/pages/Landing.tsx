@@ -163,6 +163,7 @@ const mascotOpacity = useTransform(scrollY, [0, 100, 800, 1000], [0, 1, 1, 0]);
       </div>
 
       {/* Bento Grid Features Section */}
+      {/* TODO:TO UPDATE THIS SECTION WITH NEW COMPONENT! */}
       <div id="features">
         <Features />
       </div>
