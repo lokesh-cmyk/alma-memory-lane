@@ -40,6 +40,34 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Theme Switcher - Fixed position with high z-index */}
+      <div className="fixed top-4 right-4 z-50 flex gap-2">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setTheme("light")}
+          className={`rounded-full cursor-pointer transition-all ${theme === "light" ? "bg-primary text-primary-foreground shadow-primary" : ""}`}
+        >
+          <Sun className="h-5 w-5" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setTheme("dark")}
+          className={`rounded-full cursor-pointer transition-all ${theme === "dark" ? "bg-primary text-primary-foreground shadow-primary" : ""}`}
+        >
+          <Moon className="h-5 w-5" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setTheme("system")}
+          className={`rounded-full cursor-pointer transition-all ${theme === "system" ? "bg-primary text-primary-foreground shadow-primary" : ""}`}
+        >
+          <Monitor className="h-5 w-5" />
+        </Button>
+      </div>
+
       {/* Tubelight Navigation */}
       <NavBar items={navItems} />
 
@@ -66,35 +94,35 @@ const Landing = () => {
           </motion.div>
           
           {/* Mascot */}
-          <div className="w-24 h-24 bg-gradient-to-br from-primary to-primary-glow rounded-full flex items-center justify-center shadow-glow">
-            <Sparkles className="w-12 h-12 text-white" />
+          <div className="w-24 h-24 bg-gradient-to-br from-primary via-primary to-primary/80 rounded-full flex items-center justify-center shadow-lg border-2 border-primary">
+            <Sparkles className="w-12 h-12 text-primary-foreground" />
           </div>
         </div>
       </motion.div>
 
       {/* Hero Section with Animated Background */}
       <div className="relative w-full min-h-screen flex items-center justify-center overflow-hidden" id="hero">
-        {/* Full-width Animated Background */}
-        <div className="absolute inset-0 w-full h-full">
+        {/* Full-width Animated Background - Lower z-index */}
+        <div className="absolute inset-0 w-full h-full z-0">
           <AnimatedBackground />
         </div>
         
         {/* Overlay for better text visibility */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-background/90" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-background/90 z-5" />
 
-        {/* Hero Content */}
+        {/* Hero Content - Higher z-index for clickable elements */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative z-10 text-center max-w-5xl mx-auto px-4 py-20"
+          className="relative z-20 text-center max-w-5xl mx-auto px-4 py-20"
         >
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className="w-24 h-24 bg-gradient-to-br from-primary to-primary-glow rounded-3xl flex items-center justify-center shadow-glow mx-auto mb-8"
+            className="w-24 h-24 bg-gradient-to-br from-primary via-primary to-primary/80 rounded-3xl flex items-center justify-center shadow-lg mx-auto mb-8 border-2 border-primary"
           >
-            <Sparkles className="w-12 h-12 text-white" />
+            <Sparkles className="w-12 h-12 text-primary-foreground" />
           </motion.div>
 
           <h1 className="text-6xl md:text-8xl font-extrabold mb-8 bg-gradient-to-r from-foreground via-foreground to-foreground/60 bg-clip-text text-transparent leading-tight">
@@ -103,7 +131,7 @@ const Landing = () => {
           
           <p className="text-xl md:text-3xl text-muted-foreground mb-12 leading-relaxed font-light max-w-3xl mx-auto">
             Your AI-powered personal memory companion.<br />
-            <span className="font-medium bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+            <span className="font-medium bg-gradient-to-r from-primary via-primary to-primary/70 bg-clip-text text-transparent">
               Never forget the moments that matter.
             </span>
           </p>
@@ -113,7 +141,7 @@ const Landing = () => {
               <Button
                 size="lg"
                 onClick={() => navigate("/auth")}
-                className="text-lg px-10 py-7 rounded-full bg-gradient-to-r from-primary to-primary-glow hover:shadow-glow transition-all duration-300 hover:scale-105 cursor-pointer"
+                className="text-lg px-10 py-7 rounded-full bg-gradient-to-r from-primary via-primary to-primary/90 hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer relative z-30 shadow-primary"
               >
                 Get Started Free
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -122,7 +150,7 @@ const Landing = () => {
                 size="lg"
                 variant="outline"
                 onClick={() => navigate("/auth")}
-                className="text-lg px-10 py-7 rounded-full border-2 hover:bg-primary/5 cursor-pointer"
+                className="text-lg px-10 py-7 rounded-full border-2 border-border hover:bg-accent transition-all duration-300 hover:scale-105 cursor-pointer relative z-30 shadow-md"
               >
                 Watch Demo
               </Button>
@@ -131,7 +159,7 @@ const Landing = () => {
             <Button
               size="lg"
               onClick={() => navigate("/dashboard")}
-              className="text-lg px-10 py-7 rounded-full bg-gradient-to-r from-primary to-primary-glow hover:shadow-glow transition-all duration-300 hover:scale-105 cursor-pointer"
+              className="text-lg px-10 py-7 rounded-full bg-gradient-to-r from-primary via-primary to-primary/90 hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer relative z-30 shadow-primary"
             >
               Go to Dashboard
               <ArrowRight className="ml-2 h-5 w-5" />
@@ -157,13 +185,10 @@ const Landing = () => {
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="relative max-w-5xl mx-auto mb-20 overflow-hidden rounded-[3rem] border border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-background p-12 md:p-16"
+          className="relative max-w-5xl mx-auto mb-20 overflow-hidden rounded-[3rem] border-2 border-border bg-gradient-to-br from-primary/10 via-primary/5 to-background p-12 md:p-16 shadow-lg"
         >
-          {/* Texture Overlay */}
-          <div className="absolute inset-0 texture-overlay opacity-30" />
-          
           {/* Grid Lines */}
-          <div className="absolute inset-0 grid-lines opacity-20" />
+          <div className="absolute inset-0 grid-lines opacity-10" />
           
           <div className="relative z-10 text-center">
             <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
@@ -175,7 +200,7 @@ const Landing = () => {
             <Button
               size="lg"
               onClick={() => navigate("/auth")}
-              className="text-lg px-10 py-7 rounded-full bg-gradient-to-r from-primary to-primary-glow hover:shadow-glow transition-all duration-300 hover:scale-105 cursor-pointer"
+              className="text-lg px-10 py-7 rounded-full bg-gradient-to-r from-primary via-primary to-primary/90 hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer z-20 relative shadow-primary"
             >
               Start Your Journey
               <ArrowRight className="ml-2 h-5 w-5" />
@@ -186,12 +211,12 @@ const Landing = () => {
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="absolute -top-20 -right-20 w-40 h-40 border border-primary/20 rounded-full"
+            className="absolute -top-20 -right-20 w-40 h-40 border-2 border-primary/20 rounded-full"
           />
           <motion.div
             animate={{ rotate: -360 }}
             transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-            className="absolute -bottom-20 -left-20 w-40 h-40 border border-primary-glow/20 rounded-full"
+            className="absolute -bottom-20 -left-20 w-40 h-40 border-2 border-primary/20 rounded-full"
           />
         </motion.div>
       </div>

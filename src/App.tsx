@@ -13,13 +13,18 @@ import Reminders from "./pages/Reminders";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
-//TODO:landing page has to be done
+
+// Matsu Ghibli texture background component
+function GhibliTexture() {
+  return <div className="texture" />;
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <AuthProvider>
         <TooltipProvider>
+          <GhibliTexture />
           <Toaster />
           <Sonner />
           <BrowserRouter>
