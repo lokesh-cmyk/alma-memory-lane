@@ -8,7 +8,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Matsu Ghibli Theme - Warm earthy colors */
+    /* Matsu Ghibli Theme - Light/White Theme Only */
     --background: oklch(0.91 0.048 83.6);
     --foreground: oklch(0.41 0.077 78.9);
 
@@ -40,6 +40,9 @@ All colors MUST be HSL.
     --ring: oklch(0.51 0.077 74.3);
 
     --radius: 0.625rem;
+
+    /* Tiles hover color */
+    --tile: oklch(0.83 0.08 111.7);
 
     /* Matsu shadows - characteristic border shadow */
     --shadow-xs: 0 2px 0 0 var(--border);
@@ -81,65 +84,6 @@ All colors MUST be HSL.
     --chart-3: oklch(0.48 0.09 210.9);
     --chart-4: oklch(0.85 0.19 85.4);
     --chart-5: oklch(0.74 0.19 66.3);
-  }
-
-  .dark {
-    /* Dark mode Matsu theme */
-    --background: oklch(0.15 0.02 83.6);
-    --foreground: oklch(0.92 0.02 83.6);
-
-    --card: oklch(0.18 0.03 83.6);
-    --card-foreground: oklch(0.92 0.02 83.6);
-
-    --popover: oklch(0.18 0.03 83.6);
-    --popover-foreground: oklch(0.92 0.02 83.6);
-
-    --primary: oklch(0.71 0.097 111.7);
-    --primary-foreground: oklch(0.15 0.02 83.6);
-    --primary-border: oklch(0.59 0.096 111.8);
-
-    --secondary: oklch(0.22 0.04 83.6);
-    --secondary-foreground: oklch(0.85 0.04 83.6);
-
-    --muted: oklch(0.20 0.03 83.7);
-    --muted-foreground: oklch(0.65 0.05 74.3);
-
-    --accent: oklch(0.24 0.04 83.6);
-    --accent-foreground: oklch(0.95 0.01 0);
-
-    --destructive: oklch(0.63 0.24 29.2);
-    --destructive-foreground: oklch(0.97 0.018 0);
-    --destructive-border: oklch(0.43 0.24 29.2);
-
-    --border: oklch(0.28 0.04 80.8);
-    --input: oklch(0.28 0.04 80.8);
-    --ring: oklch(0.71 0.097 111.7);
-
-    /* Memory type colors - dark mode */
-    --memory-text: oklch(0.70 0.14 200);
-    --memory-voice: oklch(0.72 0.16 280);  
-    --memory-photo: oklch(0.74 0.17 350);
-    --memory-document: oklch(0.76 0.15 40);
-    --memory-url: oklch(0.73 0.16 120);
-
-    /* Emotion colors - dark mode */
-    --emotion-happy: oklch(0.78 0.17 120);
-    --emotion-excited: oklch(0.80 0.19 50);
-    --emotion-calm: oklch(0.72 0.14 200);
-    --emotion-sad: oklch(0.62 0.12 220);
-    --emotion-angry: oklch(0.65 0.22 0);
-    --emotion-anxious: oklch(0.67 0.14 280);
-    --emotion-grateful: oklch(0.72 0.15 160);
-    --emotion-nostalgic: oklch(0.70 0.16 260);
-
-    --sidebar-background: oklch(0.18 0.03 83.7);
-    --sidebar-foreground: oklch(0.92 0.02 83.6);
-    --sidebar-primary: oklch(0.71 0.097 111.7);
-    --sidebar-primary-foreground: oklch(0.15 0.02 83.6);
-    --sidebar-accent: oklch(0.24 0.04 83.6);
-    --sidebar-accent-foreground: oklch(0.95 0.01 0);
-    --sidebar-border: oklch(0.28 0.04 80.8);
-    --sidebar-ring: oklch(0.71 0.097 111.7);
   }
 }
 
@@ -203,11 +147,6 @@ All colors MUST be HSL.
     height: 100dvh;
     pointer-events: none;
   }
-
-  .dark .texture {
-    opacity: 0.08;
-    mix-blend-mode: screen;
-  }
 }
 
 @layer utilities {
@@ -241,11 +180,6 @@ All colors MUST be HSL.
     background: rgba(255, 255, 255, 0.65);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 2px solid var(--border);
-  }
-  
-  .dark .glassmorphism {
-    background: rgba(0, 0, 0, 0.4);
     border: 2px solid var(--border);
   }
 }

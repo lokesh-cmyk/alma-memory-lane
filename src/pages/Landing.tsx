@@ -2,10 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { useTheme } from "next-themes";
-import { Moon, Sun, Monitor, Sparkles, ArrowRight, Home, User, Briefcase, FileText } from "lucide-react";
+import { Sparkles, ArrowRight, Home, User, Briefcase, FileText } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { Component as AnimatedBackground } from "@/components/ui/raycast-animated-blue-background";
+import { Tiles } from "@/components/ui/tiles";
 import { NavBar } from "@/components/ui/tubelight-navbar";
 import { Features } from "@/components/ui/features-11";
 import { AboutSection } from "@/components/ui/about-section";
@@ -14,7 +13,6 @@ import { MinimalFooter } from "@/components/ui/minimal-footer";
 const Landing = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const { scrollY } = useScroll();
   
@@ -40,34 +38,6 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Theme Switcher - Fixed position with high z-index */}
-      <div className="fixed top-4 right-4 z-50 flex gap-2">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setTheme("light")}
-          className={`rounded-full cursor-pointer transition-all ${theme === "light" ? "bg-primary text-primary-foreground shadow-primary" : ""}`}
-        >
-          <Sun className="h-5 w-5" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setTheme("dark")}
-          className={`rounded-full cursor-pointer transition-all ${theme === "dark" ? "bg-primary text-primary-foreground shadow-primary" : ""}`}
-        >
-          <Moon className="h-5 w-5" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setTheme("system")}
-          className={`rounded-full cursor-pointer transition-all ${theme === "system" ? "bg-primary text-primary-foreground shadow-primary" : ""}`}
-        >
-          <Monitor className="h-5 w-5" />
-        </Button>
-      </div>
-
       {/* Tubelight Navigation */}
       <NavBar items={navItems} />
 
@@ -100,21 +70,26 @@ const Landing = () => {
         </div>
       </motion.div>
 
-      {/* Hero Section with Animated Background */}
+      {/* Hero Section with Tiles Background */}
       <div className="relative w-full min-h-screen flex items-center justify-center overflow-hidden" id="hero">
-        {/* Full-width Animated Background - Lower z-index */}
-        <div className="absolute inset-0 w-full h-full z-0">
-          <AnimatedBackground />
+        {/* Tiles Background - Lowest z-index, no pointer events */}
+        <div className="absolute inset-0 w-full h-full z-0 pointer-events-none">
+          <Tiles 
+            rows={50} 
+            cols={15}
+            tileSize="md"
+            className="opacity-40"
+          />
         </div>
         
-        {/* Overlay for better text visibility */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-background/90 z-5" />
+        {/* Subtle overlay for better text visibility - no pointer events */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background/60 z-[1] pointer-events-none" />
 
-        {/* Hero Content - Higher z-index for clickable elements */}
+        {/* Hero Content - High z-index for clickable buttons */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative z-20 text-center max-w-5xl mx-auto px-4 py-20"
+          className="relative z-[100] text-center max-w-5xl mx-auto px-4 py-20 pointer-events-auto"
         >
           <motion.div
             initial={{ scale: 0 }}
@@ -137,11 +112,11 @@ const Landing = () => {
           </p>
 
           {!user ? (
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-[110]">
               <Button
                 size="lg"
                 onClick={() => navigate("/auth")}
-                className="text-lg px-10 py-7 rounded-full bg-gradient-to-r from-primary via-primary to-primary/90 hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer relative z-30 shadow-primary"
+                className="text-lg px-10 py-7 rounded-full bg-gradient-to-r from-primary via-primary to-primary/90 hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer shadow-primary pointer-events-auto"
               >
                 Get Started Free
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -150,7 +125,7 @@ const Landing = () => {
                 size="lg"
                 variant="outline"
                 onClick={() => navigate("/auth")}
-                className="text-lg px-10 py-7 rounded-full border-2 border-border hover:bg-accent transition-all duration-300 hover:scale-105 cursor-pointer relative z-30 shadow-md"
+                className="text-lg px-10 py-7 rounded-full border-2 border-border hover:bg-accent transition-all duration-300 hover:scale-105 cursor-pointer shadow-md pointer-events-auto"
               >
                 Watch Demo
               </Button>
@@ -159,7 +134,7 @@ const Landing = () => {
             <Button
               size="lg"
               onClick={() => navigate("/dashboard")}
-              className="text-lg px-10 py-7 rounded-full bg-gradient-to-r from-primary via-primary to-primary/90 hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer relative z-30 shadow-primary"
+              className="text-lg px-10 py-7 rounded-full bg-gradient-to-r from-primary via-primary to-primary/90 hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer shadow-primary relative z-[110] pointer-events-auto"
             >
               Go to Dashboard
               <ArrowRight className="ml-2 h-5 w-5" />
@@ -200,7 +175,7 @@ const Landing = () => {
             <Button
               size="lg"
               onClick={() => navigate("/auth")}
-              className="text-lg px-10 py-7 rounded-full bg-gradient-to-r from-primary via-primary to-primary/90 hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer z-20 relative shadow-primary"
+              className="text-lg px-10 py-7 rounded-full bg-gradient-to-r from-primary via-primary to-primary/90 hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer z-[50] relative shadow-primary pointer-events-auto"
             >
               Start Your Journey
               <ArrowRight className="ml-2 h-5 w-5" />

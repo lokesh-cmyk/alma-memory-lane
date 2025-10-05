@@ -21,7 +21,7 @@ function GhibliTexture() {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} forcedTheme="light">
       <AuthProvider>
         <TooltipProvider>
           <GhibliTexture />
