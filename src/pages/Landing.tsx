@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Sparkles, ArrowRight, Home, User, Briefcase, FileText } from "lucide-react";
@@ -13,17 +13,36 @@ import { MinimalFooter } from "@/components/ui/minimal-footer";
 const Landing = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [mounted, setMounted] = useState(false);
   const { scrollY } = useScroll();
   
   // Mascot animations based on scroll
-  const mascotY = useTransform(scrollY, [0, 300, 600, 900], [100, -20, 100, -20]);
-  const mascotRotate = useTransform(scrollY, [0, 300, 600], [0, 10, -10]);
-  const mascotOpacity = useTransform(scrollY, [0, 100], [0, 1]);
+  // const mascotY = useTransform(scrollY, [0, 300, 600, 900], [100, -20, 100, -20]);
+  // const mascotRotate = useTransform(scrollY, [0, 300, 600], [0, 10, -10]);
+  // const mascotOpacity = useTransform(scrollY, [0, 100], [0, 1]);
+
+  //so many changes still left!
+const mascotY = useTransform(scrollY, [0, 300, 600, 900, 1200], [100, -20, 100, -20, -200]);
+const mascotRotate = useTransform(scrollY, [0, 300, 600, 900], [0, 10, -10, 0]);
+const mascotOpacity = useTransform(scrollY, [0, 100, 800, 1000], [0, 1, 1, 0]);
+
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Handle hash navigation on mount or when hash changes
+  useEffect(() => {
+    if (mounted && location.hash) {
+      setTimeout(() => {
+        const element = document.querySelector(location.hash);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
+  }, [mounted, location.hash]);
 
   if (!mounted || loading) {
     return null;
@@ -48,7 +67,7 @@ const Landing = () => {
           rotate: mascotRotate,
           opacity: mascotOpacity,
         }}
-        className="fixed right-8 top-1/2 z-40 pointer-events-none hidden lg:block"
+        className="fixed left-3 top-1/2 z-40 pointer-events-none hidden lg:block"
       >
         <div className="relative">
           {/* Speech Bubble */}
@@ -57,7 +76,7 @@ const Landing = () => {
               scale: [1, 1.05, 1],
             }}
             transition={{ duration: 3, repeat: Infinity }}
-            className="glassmorphism rounded-2xl px-4 py-3 shadow-lg absolute -left-48 top-0"
+            className="glassmorphism rounded-2xl px-4 py-3 shadow-lg absolute -right-48 top-0"
           >
             <p className="text-sm font-medium">Your memories are safe! 🛡️</p>
             <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 rotate-45 w-3 h-3 glassmorphism" />
@@ -153,7 +172,7 @@ const Landing = () => {
         <AboutSection />
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 py-20">
+      <div className="relative z-50 container mx-auto px-4 py-20">
         {/* CTA Banner */}
         <motion.div
           id="cta"
@@ -162,8 +181,20 @@ const Landing = () => {
           viewport={{ once: true }}
           className="relative max-w-5xl mx-auto mb-20 overflow-hidden rounded-[3rem] border-2 border-border bg-gradient-to-br from-primary/10 via-primary/5 to-background p-12 md:p-16 shadow-lg"
         >
+          {/* Decorative Elements - Behind content */}
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            className="absolute -top-20 -right-20 w-40 h-40 border-2 border-primary/20 rounded-full pointer-events-none"
+          />
+          <motion.div
+            animate={{ rotate: -360 }}
+            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+            className="absolute -bottom-20 -left-20 w-40 h-40 border-2 border-primary/20 rounded-full pointer-events-none"
+          />
+
           {/* Grid Lines */}
-          <div className="absolute inset-0 grid-lines opacity-10" />
+          <div className="absolute inset-0 grid-lines opacity-10 pointer-events-none" />
           
           <div className="relative z-10 text-center">
             <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
@@ -175,24 +206,12 @@ const Landing = () => {
             <Button
               size="lg"
               onClick={() => navigate("/auth")}
-              className="text-lg px-10 py-7 rounded-full bg-gradient-to-r from-primary via-primary to-primary/90 hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer z-[50] relative shadow-primary pointer-events-auto"
+              className="text-lg px-10 py-7 rounded-full bg-gradient-to-r from-primary via-primary to-primary/90 hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer relative shadow-primary"
             >
               Start Your Journey
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </div>
-
-          {/* Decorative Elements */}
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="absolute -top-20 -right-20 w-40 h-40 border-2 border-primary/20 rounded-full"
-          />
-          <motion.div
-            animate={{ rotate: -360 }}
-            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-            className="absolute -bottom-20 -left-20 w-40 h-40 border-2 border-primary/20 rounded-full"
-          />
         </motion.div>
       </div>
 

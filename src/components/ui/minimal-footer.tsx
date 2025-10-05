@@ -34,28 +34,28 @@ export function MinimalFooter() {
     },
   ];
 
-  const resources = [
-    {
-      title: 'Blog',
-      href: '#',
-    },
-    {
-      title: 'Help Center',
-      href: '#',
-    },
-    {
-      title: 'Documentation',
-      href: '#',
-    },
-    {
-      title: 'Community',
-      href: '#',
-    },
-    {
-      title: 'Security',
-      href: '#',
-    },
-  ];
+  // const resources = [
+  //   {
+  //     title: 'Blog',
+  //     href: '#',
+  //   },
+  //   {
+  //     title: 'Help Center',
+  //     href: '#',
+  //   },
+  //   {
+  //     title: 'Documentation',
+  //     href: '#',
+  //   },
+  //   {
+  //     title: 'Community',
+  //     href: '#',
+  //   },
+  //   {
+  //     title: 'Security',
+  //     href: '#',
+  //   },
+  // ];
 
   const socialLinks = [
     {
@@ -115,7 +115,7 @@ export function MinimalFooter() {
             </div>
           </div>
           <div className="col-span-3 w-full md:col-span-1">
-            <span className="text-muted-foreground mb-1 text-xs">
+            {/* <span className="text-muted-foreground mb-1 text-xs">
               Resources
             </span>
             <div className="flex flex-col gap-1">
@@ -128,7 +128,7 @@ export function MinimalFooter() {
                   {title}
                 </a>
               ))}
-            </div>
+            </div> */}
           </div>
           <div className="col-span-3 w-full md:col-span-1">
             <span className="text-muted-foreground mb-1 text-xs">Company</span>

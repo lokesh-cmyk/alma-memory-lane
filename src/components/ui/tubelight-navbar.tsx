@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { Link } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import { LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -20,6 +20,8 @@ interface NavBarProps {
 export function NavBar({ items, className }: NavBarProps) {
   const [activeTab, setActiveTab] = useState(items[0].name)
   const [isMobile, setIsMobile] = useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
     const handleResize = () => {
@@ -30,6 +32,27 @@ export function NavBar({ items, className }: NavBarProps) {
     window.addEventListener("resize", handleResize)
     return () => window.removeEventListener("resize", handleResize)
   }, [])
+
+  const handleNavClick = (item: NavItem) => {
+    setActiveTab(item.name)
+    
+    // Check if it's a hash link (section navigation)
+    if (item.url.startsWith('#')) {
+      // If we're not on the landing page, navigate there first
+      if (location.pathname !== '/') {
+        navigate('/' + item.url)
+      } else {
+        // We're already on the landing page, just scroll
+        const element = document.querySelector(item.url)
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }
+    } else {
+      // It's a regular route, use navigate
+      navigate(item.url)
+    }
+  }
 
   return (
     <div
@@ -44,10 +67,9 @@ export function NavBar({ items, className }: NavBarProps) {
           const isActive = activeTab === item.name
 
           return (
-            <Link
+            <button
               key={item.name}
-              to={item.url}
-              onClick={() => setActiveTab(item.name)}
+              onClick={() => handleNavClick(item)}
               className={cn(
                 "relative cursor-pointer text-sm font-semibold px-6 py-2 rounded-full transition-colors",
                 "text-foreground/80 hover:text-primary",
@@ -76,7 +98,7 @@ export function NavBar({ items, className }: NavBarProps) {
                   </div>
                 </motion.div>
               )}
-            </Link>
+            </button>
           )
         })}
       </div>
