@@ -137,7 +137,7 @@ All colors MUST be HSL.
     background-image: url(https://matsu-theme.vercel.app/texture.jpg);
     background-size: 100% 100%;
     background-repeat: repeat;
-    opacity: 0.12;
+    opacity: 0.1;
     mix-blend-mode: multiply;
     z-index: 1;
     isolation: isolate;

@@ -15,16 +15,16 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 // Matsu Ghibli texture background component
-function GhibliTexture() {
-  return <div className="texture" />;
-}
+// function GhibliTexture() {
+//   return <div className="texture" />;
+// }
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} forcedTheme="light">
       <AuthProvider>
         <TooltipProvider>
-          <GhibliTexture />
+          {/* <GhibliTexture /> */}
           <Toaster />
           <Sonner />
           <BrowserRouter>

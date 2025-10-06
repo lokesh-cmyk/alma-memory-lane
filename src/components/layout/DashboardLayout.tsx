@@ -1,5 +1,5 @@
 import { ReactNode, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -43,9 +43,9 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     }
   };
 
-  const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  };
+  // const toggleTheme = () => {
+  //   setTheme(theme === "dark" ? "light" : "dark");
+  // };
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
@@ -53,6 +53,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           {/* Logo */}
+          <Link to="/dashboard">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center shadow-glow">
               <Brain className="w-5 h-5 text-blue-200" />
@@ -64,13 +65,14 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <p className="text-xs text-muted-foreground">Memory Companion</p>
             </div>
           </div>
+          </Link>
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            <Button
+            {/* <Button
               variant="ghost"
               size="sm"
-              onClick={toggleTheme}
+              // onClick={toggleTheme}
               className="hidden sm:flex"
             >
               {theme === "dark" ? (
@@ -78,7 +80,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               ) : (
                 <Moon className="w-4 h-4" />
               )}
-            </Button>
+            </Button> */}
 
             <Button
               variant="outline"
