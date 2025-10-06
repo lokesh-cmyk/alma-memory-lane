@@ -192,6 +192,7 @@ export type Database = {
           id: string
           memory_count: number | null
           mood_score: number | null
+          updated_at: string | null
           user_id: string
         }
         Insert: {
@@ -201,6 +202,7 @@ export type Database = {
           id?: string
           memory_count?: number | null
           mood_score?: number | null
+          updated_at?: string | null
           user_id: string
         }
         Update: {
@@ -210,6 +212,7 @@ export type Database = {
           id?: string
           memory_count?: number | null
           mood_score?: number | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
